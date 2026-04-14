@@ -1,0 +1,16 @@
+.git
+__pycache__
+*.pyc
+.env
+.pytest_cache
+.mypy_cache
+.venv
+venv
+uploads/
+tests/
+.vscode/
+.idea/
+*.md
+!README.md
+.DS_Store
+.claude/
