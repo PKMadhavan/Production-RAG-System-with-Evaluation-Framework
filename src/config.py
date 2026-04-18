@@ -1,5 +1,7 @@
 """Application configuration via environment variables."""
 
+from typing import Optional
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -38,6 +40,16 @@ class Settings(BaseSettings):
 
     # File upload
     max_file_size_mb: int = 50
+
+    # OpenAI (optional — used for RAGAS evaluation answer generation)
+    openai_api_key: Optional[str] = None
+    openai_model: str = "gpt-4o-mini"
+
+    # Evaluation
+    eval_max_samples: int = 100
+
+    # Hybrid retrieval
+    bm25_k_param: int = 60  # RRF constant k
 
     @property
     def database_url(self) -> str:

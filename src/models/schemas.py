@@ -1,6 +1,6 @@
 """Pydantic models for API request/response contracts."""
 
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -31,6 +31,7 @@ class QueryRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=1000)
     top_k: int = Field(default=5, ge=1, le=50)
     score_threshold: float = Field(default=0.0, ge=0.0, le=1.0)
+    retrieval_mode: Literal["dense", "sparse", "hybrid"] = Field(default="hybrid")
 
 
 class RetrievedChunk(BaseModel):
@@ -45,4 +46,41 @@ class QueryResponse(BaseModel):
     results: list[RetrievedChunk]
     num_results: int
     cached: bool = False
+    retrieval_mode: str = "hybrid"
+    processing_time_ms: float = 0.0
+
+
+# ── Evaluation ──────────────────────────────────────────────────────────────
+
+class EvaluationSample(BaseModel):
+    question: str = Field(..., min_length=1, max_length=1000)
+    ground_truth: Optional[str] = None
+
+
+class EvaluationRequest(BaseModel):
+    samples: list[EvaluationSample] = Field(..., min_length=1, max_length=100)
+    top_k: int = Field(default=5, ge=1, le=20)
+    retrieval_mode: Literal["dense", "sparse", "hybrid"] = Field(default="hybrid")
+
+
+class MetricScores(BaseModel):
+    faithfulness: Optional[float] = None
+    answer_relevancy: Optional[float] = None
+    context_recall: Optional[float] = None
+    context_precision: Optional[float] = None
+
+
+class EvaluationSampleResult(BaseModel):
+    question: str
+    answer: str
+    contexts: list[str]
+    ground_truth: Optional[str] = None
+    scores: MetricScores
+
+
+class EvaluationResponse(BaseModel):
+    num_samples: int
+    aggregate_scores: MetricScores
+    sample_results: list[EvaluationSampleResult]
+    llm_used: str
     processing_time_ms: float = 0.0
