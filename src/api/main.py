@@ -7,9 +7,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
-from src.api.routes import health, ingest, query
+from src.api.routes import evaluate, health, ingest, query
 from src.config import Settings
+from src.evaluation.evaluator import RAGASEvaluator
 from src.models.database import create_engine, create_session_factory, init_db
+from src.retrieval.bm25_store import BM25Index
 from src.retrieval.embeddings import EmbeddingService
 from src.retrieval.retriever import Retriever
 from src.retrieval.vector_store import VectorStore
@@ -59,14 +61,34 @@ async def lifespan(app: FastAPI):
         ttl=settings.redis_ttl_embedding,
     )
 
-    # Vector store & retriever
+    # Vector store
     app.state.vector_store = VectorStore(app.state.session_factory)
+
+    # BM25 index — built from existing DB chunks on startup
+    logger.info("Building BM25 index from existing document chunks...")
+    bm25_store = await BM25Index.build_from_db(app.state.session_factory)
+    app.state.bm25_store = bm25_store
+    logger.info(f"BM25 index ready: {bm25_store.size} chunks indexed")
+
+    # Retriever (now includes BM25)
     app.state.retriever = Retriever(
         embedding_service=app.state.embedding_service,
         vector_store=app.state.vector_store,
+        bm25_store=bm25_store,
         redis_client=redis_client,
         settings=settings,
     )
+
+    # RAGAS Evaluator
+    app.state.evaluator = RAGASEvaluator(
+        retriever=app.state.retriever,
+        settings=settings,
+    )
+    if not settings.openai_api_key:
+        logger.warning(
+            "OPENAI_API_KEY not set: evaluation will use extractive fallback. "
+            "Set OPENAI_API_KEY in .env for LLM-generated answers."
+        )
 
     logger.info("RAG API ready")
     yield
@@ -83,8 +105,11 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
         title="Production RAG API",
-        description="Retrieval-Augmented Generation system with pgvector and HuggingFace embeddings",
-        version="0.1.0",
+        description=(
+            "Retrieval-Augmented Generation system with pgvector, "
+            "HuggingFace embeddings, BM25 hybrid retrieval, and RAGAS evaluation"
+        ),
+        version="0.2.0",
         lifespan=lifespan,
     )
 
@@ -101,6 +126,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router, tags=["health"])
     app.include_router(ingest.router, prefix="/ingest", tags=["ingestion"])
     app.include_router(query.router, prefix="/query", tags=["query"])
+    app.include_router(evaluate.router, prefix="/evaluate", tags=["evaluation"])
 
     return app
 

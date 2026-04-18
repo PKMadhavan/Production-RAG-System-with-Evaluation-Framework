@@ -7,6 +7,8 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import Settings
+from src.evaluation.evaluator import RAGASEvaluator
+from src.retrieval.bm25_store import BM25Index
 from src.retrieval.embeddings import EmbeddingService
 from src.retrieval.retriever import Retriever
 from src.retrieval.vector_store import VectorStore
@@ -28,6 +30,14 @@ def get_vector_store(request: Request) -> VectorStore:
 
 def get_retriever(request: Request) -> Retriever:
     return request.app.state.retriever
+
+
+def get_bm25_store(request: Request) -> BM25Index:
+    return request.app.state.bm25_store
+
+
+def get_evaluator(request: Request) -> RAGASEvaluator:
+    return request.app.state.evaluator
 
 
 def get_settings(request: Request) -> Settings:
