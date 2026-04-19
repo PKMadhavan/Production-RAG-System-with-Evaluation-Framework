@@ -39,3 +39,4 @@ Thumbs.db
 
 # HuggingFace cache
 models_cache/
+.claude/
