@@ -51,6 +51,10 @@ class Settings(BaseSettings):
     # Hybrid retrieval
     bm25_k_param: int = 60  # RRF constant k
 
+    # LangSmith observability (optional)
+    langsmith_api_key: Optional[str] = None
+    langsmith_project: str = "rag-api"
+
     @property
     def database_url(self) -> str:
         return (

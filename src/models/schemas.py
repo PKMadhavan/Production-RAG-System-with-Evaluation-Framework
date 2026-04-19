@@ -10,6 +10,7 @@ class HealthResponse(BaseModel):
     version: str = "0.1.0"
     postgres_connected: bool = False
     redis_connected: bool = False
+    langsmith_connected: bool = False
 
 
 class ChunkInfo(BaseModel):
@@ -48,6 +49,7 @@ class QueryResponse(BaseModel):
     cached: bool = False
     retrieval_mode: str = "hybrid"
     processing_time_ms: float = 0.0
+    trace_id: Optional[str] = None
 
 
 # ── Evaluation ──────────────────────────────────────────────────────────────
@@ -84,3 +86,4 @@ class EvaluationResponse(BaseModel):
     sample_results: list[EvaluationSampleResult]
     llm_used: str
     processing_time_ms: float = 0.0
+    trace_id: Optional[str] = None
