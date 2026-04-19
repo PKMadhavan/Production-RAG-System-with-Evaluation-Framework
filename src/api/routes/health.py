@@ -7,8 +7,9 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.dependencies import get_db_session, get_redis
+from src.api.dependencies import get_db_session, get_redis, get_tracing_service
 from src.models.schemas import HealthResponse
+from src.observability.tracing import TracingService
 
 router = APIRouter()
 
@@ -17,6 +18,7 @@ router = APIRouter()
 async def health_check(
     session: AsyncSession = Depends(get_db_session),
     redis: Optional[Redis] = Depends(get_redis),
+    tracing: Optional[TracingService] = Depends(get_tracing_service),
 ) -> HealthResponse:
     """Check the health of the API and its dependencies."""
     pg_connected = False
@@ -34,9 +36,14 @@ async def health_check(
         except Exception:
             pass
 
+    langsmith_connected = False
+    if tracing:
+        langsmith_connected = await tracing.check_connection()
+
     return HealthResponse(
         status="ok" if pg_connected else "degraded",
         version="0.1.0",
         postgres_connected=pg_connected,
         redis_connected=redis_connected,
+        langsmith_connected=langsmith_connected,
     )
