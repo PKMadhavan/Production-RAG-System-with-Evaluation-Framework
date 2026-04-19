@@ -1,7 +1,14 @@
 """Document ingestion endpoint."""
 
 import logging
-from typing import Literal, Optional
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Literal, Optional
+
+
+@asynccontextmanager
+async def _noop_context() -> AsyncIterator[None]:
+    """No-op async context manager used when tracing is disabled."""
+    yield None
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from redis.asyncio import Redis
@@ -13,10 +20,12 @@ from src.api.dependencies import (
     get_embedding_service,
     get_redis,
     get_settings,
+    get_tracing_service,
 )
 from src.config import Settings
 from src.ingestion.pipeline import ingest_document
 from src.models.schemas import IngestResponse
+from src.observability.tracing import TracingService
 from src.retrieval.bm25_store import BM25Index
 from src.retrieval.embeddings import EmbeddingService
 
@@ -38,6 +47,7 @@ async def ingest_document_endpoint(
     settings: Settings = Depends(get_settings),
     redis: Optional[Redis] = Depends(get_redis),
     bm25_store: BM25Index = Depends(get_bm25_store),
+    tracing: Optional[TracingService] = Depends(get_tracing_service),
 ) -> IngestResponse:
     """Ingest a document (PDF or plain text) into the vector store."""
     if file.content_type not in ALLOWED_CONTENT_TYPES:
@@ -59,37 +69,47 @@ async def ingest_document_endpoint(
         )
 
     try:
-        result = await ingest_document(
-            file=file,
-            chunking_strategy=chunking_strategy,
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            embedding_service=embedding_service,
-            session=session,
-            settings=settings,
-        )
+        outputs: dict = {}
+        async with (
+            tracing.trace_ingest(
+                filename=file.filename or "unknown",
+                chunking_strategy=chunking_strategy,
+                chunk_size=chunk_size,
+                outputs=outputs,
+            ) if tracing else _noop_context()
+        ) as run_id:
+            result = await ingest_document(
+                file=file,
+                chunking_strategy=chunking_strategy,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                embedding_service=embedding_service,
+                session=session,
+                settings=settings,
+            )
 
-        # Update BM25 index with new chunks
-        chunk_ids = [c.chunk_id for c in result.chunks]
-        chunk_texts = []
-        for c in result.chunks:
-            # content_preview is truncated; we need full texts from the pipeline
-            # The pipeline already stored them in DB; BM25 uses preview for now.
-            # For production, pipeline should return full texts too.
-            chunk_texts.append(c.content_preview)
-        bm25_store.add_chunks(chunk_ids, chunk_texts)
+            # Update BM25 index with new chunks
+            chunk_ids = [c.chunk_id for c in result.chunks]
+            chunk_texts = [c.content_preview for c in result.chunks]
+            bm25_store.add_chunks(chunk_ids, chunk_texts)
 
-        # Invalidate query cache since corpus changed
-        if redis:
-            try:
-                keys = [
-                    key async for key in redis.scan_iter(match="rag:query:*")
-                ]
-                if keys:
-                    await redis.delete(*keys)
-                    logger.info(f"Invalidated {len(keys)} cached queries")
-            except Exception as e:
-                logger.warning(f"Failed to invalidate query cache: {e}")
+            # Invalidate query cache since corpus changed
+            if redis:
+                try:
+                    keys = [
+                        key async for key in redis.scan_iter(match="rag:query:*")
+                    ]
+                    if keys:
+                        await redis.delete(*keys)
+                        logger.info(f"Invalidated {len(keys)} cached queries")
+                except Exception as e:
+                    logger.warning(f"Failed to invalidate query cache: {e}")
+
+            outputs.update({
+                "document_id": result.document_id,
+                "num_chunks": result.num_chunks,
+                "processing_time_ms": result.processing_time_ms,
+            })
 
         return result
 
