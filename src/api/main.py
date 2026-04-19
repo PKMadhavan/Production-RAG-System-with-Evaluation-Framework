@@ -11,6 +11,7 @@ from src.api.routes import evaluate, health, ingest, query
 from src.config import Settings
 from src.evaluation.evaluator import RAGASEvaluator
 from src.models.database import create_engine, create_session_factory, init_db
+from src.observability.tracing import TracingService
 from src.retrieval.bm25_store import BM25Index
 from src.retrieval.embeddings import EmbeddingService
 from src.retrieval.retriever import Retriever
@@ -89,6 +90,23 @@ async def lifespan(app: FastAPI):
             "OPENAI_API_KEY not set: evaluation will use extractive fallback. "
             "Set OPENAI_API_KEY in .env for LLM-generated answers."
         )
+
+    # LangSmith tracing (optional — graceful degradation)
+    tracing_service = None
+    if settings.langsmith_api_key:
+        try:
+            import langsmith
+            client = langsmith.Client(api_key=settings.langsmith_api_key)
+            tracing_service = TracingService(
+                client=client,
+                project_name=settings.langsmith_project,
+            )
+            logger.info(f"LangSmith tracing enabled (project: {settings.langsmith_project})")
+        except Exception as e:
+            logger.warning(f"LangSmith initialization failed ({e}), tracing disabled")
+    else:
+        logger.info("LANGSMITH_API_KEY not set, tracing disabled")
+    app.state.tracing_service = tracing_service
 
     logger.info("RAG API ready")
     yield

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import Settings
 from src.evaluation.evaluator import RAGASEvaluator
+from src.observability.tracing import TracingService
 from src.retrieval.bm25_store import BM25Index
 from src.retrieval.embeddings import EmbeddingService
 from src.retrieval.retriever import Retriever
@@ -46,3 +47,7 @@ def get_settings(request: Request) -> Settings:
 
 def get_redis(request: Request) -> Optional[Redis]:
     return request.app.state.redis_client
+
+
+def get_tracing_service(request: Request) -> Optional[TracingService]:
+    return request.app.state.tracing_service

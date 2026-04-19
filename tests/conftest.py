@@ -113,6 +113,10 @@ async def client(
     app.state.vector_store = mock_vector_store
     app.state.retriever = mock_retriever
     app.state.redis_client = None
+    app.state.tracing_service = None
+    app.state.bm25_store = MagicMock()
+    app.state.bm25_store.size = 0
+    app.state.evaluator = MagicMock()
 
     # Override the dependency to use our mock session directly
     from src.api.dependencies import get_db_session
