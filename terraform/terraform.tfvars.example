@@ -1,0 +1,8 @@
+# Copy this file to terraform.tfvars and fill in real values.
+# terraform.tfvars is gitignored — never commit it.
+
+project_id        = "your-gcp-project-id"
+region            = "us-central1"
+db_password       = "a-strong-password-here"
+openai_api_key    = "sk-proj-..."
+langsmith_api_key = "lsv2_pt_..."
