@@ -37,8 +37,12 @@ class TestBM25Index:
         assert index.size == 2
 
     def test_add_chunks_makes_searchable(self):
+        # Need 3+ docs so BM25 IDF is positive for query terms in only 1 doc
         index = BM25Index()
-        index.add_chunks(["chunk-1"], ["machine learning is great"])
+        index.add_chunks(
+            ["chunk-1", "chunk-2", "chunk-3"],
+            ["machine learning is great", "cooking and recipes", "weather forecast today"],
+        )
         results = index.search("machine learning", top_k=1)
         assert len(results) == 1
         assert results[0][0] == "chunk-1"
