@@ -44,15 +44,17 @@ class TestBM25Index:
         assert results[0][0] == "chunk-1"
 
     def test_search_relevance_ordering(self):
+        # Need 3+ docs so BM25 IDF is positive (log((N-df+0.5)/(df+0.5)) > 0)
         index = BM25Index()
         index.add_chunks(
-            ["id-low", "id-high"],
+            ["id-low", "id-high", "id-extra"],
             [
                 "the weather is nice today",
                 "machine learning deep learning neural networks",
+                "cooking recipes and kitchen tips",
             ],
         )
-        results = index.search("machine learning", top_k=2)
+        results = index.search("machine learning", top_k=3)
         chunk_ids = [r[0] for r in results]
         assert chunk_ids[0] == "id-high"  # more term overlap should rank first
 
@@ -77,11 +79,12 @@ class TestBM25Index:
         assert index.size == 0
 
     def test_incremental_adds(self):
+        # Need 3+ docs so BM25 IDF is positive for unique query terms
         index = BM25Index()
-        index.add_chunks(["id-1"], ["first document"])
-        index.add_chunks(["id-2"], ["second document"])
-        assert index.size == 2
-        results = index.search("second", top_k=1)
+        index.add_chunks(["id-1", "id-extra"], ["first document about weather", "cooking and recipes"])
+        index.add_chunks(["id-2"], ["second document about computing"])
+        assert index.size == 3
+        results = index.search("second computing", top_k=1)
         assert results[0][0] == "id-2"
 
 

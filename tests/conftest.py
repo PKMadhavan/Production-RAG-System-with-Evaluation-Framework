@@ -8,7 +8,12 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from src.config import Settings
-from src.models.schemas import QueryResponse, RetrievedChunk
+from src.models.schemas import (
+    EvaluationResponse,
+    MetricScores,
+    QueryResponse,
+    RetrievedChunk,
+)
 
 
 @pytest.fixture
@@ -116,7 +121,17 @@ async def client(
     app.state.tracing_service = None
     app.state.bm25_store = MagicMock()
     app.state.bm25_store.size = 0
-    app.state.evaluator = MagicMock()
+    mock_eval = MagicMock()
+    mock_eval.evaluate = AsyncMock(
+        return_value=EvaluationResponse(
+            num_samples=1,
+            aggregate_scores=MetricScores(),
+            sample_results=[],
+            llm_used="extractive",
+            processing_time_ms=10.0,
+        )
+    )
+    app.state.evaluator = mock_eval
 
     # Override the dependency to use our mock session directly
     from src.api.dependencies import get_db_session

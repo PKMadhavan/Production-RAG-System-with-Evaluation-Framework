@@ -109,6 +109,7 @@ class BM25Index:
         return [
             (self._corpus_ids[i], float(scores[i]))
             for i in top_indices
+            if scores[i] > 0
         ]
 
     @property
