@@ -1,39 +1,39 @@
 # Production RAG System with Evaluation Framework
 
-A production-grade Retrieval-Augmented Generation (RAG) system built with FastAPI, pgvector, and HuggingFace embeddings. Features document ingestion, hybrid chunking strategies, dense vector retrieval, Redis caching, and full Docker containerization.
+A production-grade Retrieval-Augmented Generation (RAG) system built with FastAPI, pgvector, HuggingFace embeddings, BM25 hybrid retrieval, RAGAS evaluation, LangSmith observability, and deployed to GCP Cloud Run via Terraform + GitHub Actions CI/CD.
+
+**Live demo:** https://rag-api-rp6ga3bkwa-uc.a.run.app/docs
 
 ## Architecture
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌─────────────────┐
-│   Client     │────▶│  FastAPI App  │────▶│  PostgreSQL +   │
-│  (REST API)  │◀────│  (uvicorn)   │◀────│   pgvector      │
-└─────────────┘     └──────┬───────┘     └─────────────────┘
-                           │
-                    ┌──────┴───────┐
-                    │    Redis     │
-                    │   (cache)    │
-                    └──────────────┘
+                        GitHub Actions CI/CD
+                               │
+                               ▼
+Internet ──▶ Cloud Run (FastAPI) ──▶ Cloud SQL (PostgreSQL + pgvector)
+                    │           ──▶ Memorystore (Redis)
+                    └──────────────▶ LangSmith (traces)
 ```
 
 ### Data Flow — Ingestion
 ```
 POST /ingest (file upload)
-  → Document Loader (PDF via pypdf / plain text)
-  → Chunking (fixed-size or semantic)
-  → Embedding (BAAI/bge-large-en-v1.5, 1024-dim)
-  → Store in pgvector
-  → Invalidate query cache
+  → Document Loader (PDF / plain text)
+  → Chunker (fixed-size or semantic)
+  → Embedder (BAAI/bge-large-en-v1.5, 1024-dim)
+  → pgvector store + BM25 index update
+  → Invalidate Redis cache
+  → LangSmith trace
 ```
 
 ### Data Flow — Query
 ```
-POST /query { query, top_k, score_threshold }
-  → Check Redis cache
-  → Embed query
-  → Cosine similarity search (pgvector)
-  → Return ranked chunks + scores
-  → Cache result
+POST /query { query, retrieval_mode, top_k }
+  → Redis cache check
+  → Dense: pgvector cosine similarity
+  → Sparse: BM25 term frequency
+  → Hybrid: RRF fusion (dense rank + sparse rank)
+  → LangSmith trace
 ```
 
 ## Tech Stack
@@ -42,17 +42,21 @@ POST /query { query, top_k, score_threshold }
 |-----------|-----------|
 | Backend | FastAPI + uvicorn |
 | Embeddings | BAAI/bge-large-en-v1.5 (HuggingFace) |
-| Vector Store | PostgreSQL + pgvector |
+| Vector Store | PostgreSQL 16 + pgvector |
+| Sparse Retrieval | BM25 (rank-bm25) |
+| Hybrid Fusion | Reciprocal Rank Fusion (RRF) |
+| Evaluation | RAGAS (faithfulness, relevancy, recall, precision) |
+| Observability | LangSmith tracing |
 | Caching | Redis |
-| Document Processing | pypdf, LangChain text splitters |
-| Containerization | Docker + Docker Compose |
+| Infrastructure | GCP Cloud Run + Cloud SQL + Memorystore |
+| IaC | Terraform |
+| CI/CD | GitHub Actions |
 | Testing | pytest + pytest-asyncio |
 
-## Quick Start
+## Quick Start (Local)
 
 ### Prerequisites
 - Docker and Docker Compose
-- Git
 
 ### 1. Clone the repository
 ```bash
@@ -63,7 +67,7 @@ cd Production-RAG-System-with-Evaluation-Framework
 ### 2. Configure environment
 ```bash
 cp .env.example .env
-# Edit .env if you want to change defaults (optional)
+# Add your OPENAI_API_KEY and LANGSMITH_API_KEY (both optional)
 ```
 
 ### 3. Start all services
@@ -71,124 +75,166 @@ cp .env.example .env
 docker compose up --build
 ```
 
-This starts:
-- **app** — FastAPI server on port 8000
-- **postgres** — PostgreSQL 16 with pgvector on port 5432
-- **redis** — Redis 7 on port 6379
-
-> **Note:** The first startup downloads the embedding model (~1.3GB). Subsequent starts use the cached model.
+> **Note:** First startup downloads the embedding model (~1.3 GB). Subsequent starts use the cached model.
 
 ### 4. Verify
 ```bash
 curl http://localhost:8000/health
 ```
 
-Expected response:
 ```json
 {
   "status": "ok",
   "version": "0.1.0",
   "postgres_connected": true,
-  "redis_connected": true
+  "redis_connected": true,
+  "langsmith_connected": true
 }
 ```
 
 ## API Endpoints
 
+Interactive docs available at `http://localhost:8000/docs`
+
 ### GET /health
 Health check with dependency status.
 
 ### POST /ingest
-Ingest a document into the vector store.
-
 ```bash
-# Ingest a text file
 curl -X POST http://localhost:8000/ingest/ \
-  -F "file=@document.txt" \
-  -F "chunking_strategy=fixed" \
-  -F "chunk_size=512" \
-  -F "chunk_overlap=50"
-
-# Ingest a PDF
-curl -X POST http://localhost:8000/ingest/ \
-  -F "file=@paper.pdf" \
-  -F "chunking_strategy=semantic"
+  -F "file=@document.pdf" \
+  -F "chunking_strategy=fixed"
 ```
 
-**Parameters:**
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| file | File | required | PDF or plain text file |
+| file | File | required | PDF or plain text |
 | chunking_strategy | string | "fixed" | "fixed" or "semantic" |
-| chunk_size | int | 512 | Characters per chunk (100-2000) |
+| chunk_size | int | 512 | Characters per chunk |
 | chunk_overlap | int | 50 | Overlap between chunks |
 
 ### POST /query
-Query the RAG system.
-
 ```bash
 curl -X POST http://localhost:8000/query/ \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What is machine learning?",
-    "top_k": 5,
-    "score_threshold": 0.3
+    "retrieval_mode": "hybrid",
+    "top_k": 5
   }'
 ```
 
-**Parameters:**
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| query | string | required | The search query (1-1000 chars) |
-| top_k | int | 5 | Number of results to return (1-50) |
-| score_threshold | float | 0.0 | Minimum similarity score (0.0-1.0) |
+| query | string | required | Search query |
+| retrieval_mode | string | "hybrid" | "dense", "sparse", or "hybrid" |
+| top_k | int | 5 | Number of results (1-50) |
+| score_threshold | float | 0.0 | Minimum similarity score |
+
+### POST /evaluate
+```bash
+curl -X POST http://localhost:8000/evaluate/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "samples": [{"question": "What is RAG?"}],
+    "retrieval_mode": "hybrid"
+  }'
+```
+
+Returns RAGAS metrics: faithfulness, answer_relevancy, context_recall, context_precision.
+
+## GCP Deployment
+
+### Prerequisites
+- [gcloud CLI](https://cloud.google.com/sdk/docs/install) installed and authenticated
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.5 installed
+- A GCP project with billing enabled
+
+### Step 1 — Create GCS state bucket
+```bash
+export PROJECT_ID=your-gcp-project-id
+gsutil mb -p $PROJECT_ID gs://${PROJECT_ID}-tf-state
+```
+
+### Step 2 — Configure Terraform
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your project_id, db_password, and API keys
+```
+
+Update `main.tf` backend bucket:
+```hcl
+backend "gcs" {
+  bucket = "your-project-id-tf-state"
+  prefix = "rag-api"
+}
+```
+
+### Step 3 — Provision infrastructure
+```bash
+terraform init
+terraform plan
+terraform apply
+```
+
+This creates: Cloud SQL, Memorystore, Artifact Registry, Cloud Run, VPC, secrets.
+
+### Step 4 — Set up GitHub Actions secrets
+
+In your GitHub repo → Settings → Secrets → Actions, add:
+
+| Secret | Value |
+|--------|-------|
+| `GCP_PROJECT_ID` | Your GCP project ID |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | From `terraform output` (or set up manually) |
+| `GCP_SERVICE_ACCOUNT` | `rag-api-sa@YOUR_PROJECT.iam.gserviceaccount.com` |
+
+### Step 5 — Push to deploy
+```bash
+git push origin main
+```
+
+GitHub Actions will: run tests → build Docker image → push to Artifact Registry → deploy to Cloud Run.
 
 ## Project Structure
 
 ```
 ├── src/
-│   ├── config.py                 # Environment-based settings
+│   ├── config.py                    # Environment-based settings
 │   ├── models/
-│   │   ├── database.py           # SQLAlchemy models + pgvector
-│   │   └── schemas.py            # Pydantic request/response models
+│   │   ├── database.py              # SQLAlchemy models + pgvector
+│   │   └── schemas.py               # Pydantic request/response models
 │   ├── ingestion/
-│   │   ├── document_loader.py    # PDF + text extraction
-│   │   ├── chunking.py           # Fixed-size + semantic chunking
-│   │   └── pipeline.py           # Ingestion orchestrator
+│   │   ├── document_loader.py       # PDF + text extraction
+│   │   ├── chunking.py              # Fixed-size + semantic chunking
+│   │   └── pipeline.py              # Ingestion orchestrator
 │   ├── retrieval/
-│   │   ├── embeddings.py         # HuggingFace embedding service
-│   │   ├── vector_store.py       # pgvector similarity search
-│   │   └── retriever.py          # Query orchestrator with caching
+│   │   ├── embeddings.py            # HuggingFace embedding service
+│   │   ├── vector_store.py          # pgvector cosine similarity
+│   │   ├── bm25_store.py            # In-memory BM25 index
+│   │   └── retriever.py             # Hybrid retrieval + RRF fusion
+│   ├── evaluation/
+│   │   └── evaluator.py             # RAGAS evaluation pipeline
+│   ├── observability/
+│   │   └── tracing.py               # LangSmith tracing service
 │   └── api/
-│       ├── main.py               # FastAPI app factory
-│       ├── dependencies.py       # Dependency injection
+│       ├── main.py                  # FastAPI app + lifespan
+│       ├── dependencies.py          # Dependency injection
 │       └── routes/
-│           ├── health.py         # GET /health
-│           ├── ingest.py         # POST /ingest
-│           └── query.py          # POST /query
-├── tests/                        # pytest test suite
-├── docker-compose.yml            # Multi-service setup
-├── Dockerfile                    # App container
-├── requirements.txt              # Python dependencies
-└── .env.example                  # Environment template
+│           ├── health.py            # GET /health
+│           ├── ingest.py            # POST /ingest
+│           ├── query.py             # POST /query
+│           └── evaluate.py          # POST /evaluate
+├── terraform/                       # GCP infrastructure as code
+├── .github/workflows/deploy.yml     # CI/CD pipeline
+├── tests/                           # pytest test suite
+├── docker-compose.yml               # Local multi-service setup
+├── Dockerfile                       # Production container
+└── .env.example                     # Environment template
 ```
 
-## Development
-
-### Local Setup (without Docker)
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# Start PostgreSQL and Redis locally, then:
-cp .env.example .env
-# Edit .env: set POSTGRES_HOST=localhost, REDIS_HOST=localhost
-
-uvicorn src.api.main:app --reload --port 8000
-```
-
-### Running Tests
+## Running Tests
 ```bash
 pip install -r requirements.txt
 pytest tests/ -v
@@ -197,31 +243,24 @@ pytest tests/ --cov=src --cov-report=term-missing
 
 ## Configuration
 
-All settings are configurable via environment variables (see `.env.example`):
-
 | Variable | Default | Description |
 |----------|---------|-------------|
-| APP_ENV | development | Environment (development/production) |
-| LOG_LEVEL | INFO | Logging level |
 | POSTGRES_HOST | localhost | PostgreSQL host |
-| POSTGRES_PORT | 5432 | PostgreSQL port |
-| POSTGRES_USER | raguser | Database user |
-| POSTGRES_PASSWORD | changeme | Database password |
-| POSTGRES_DB | ragdb | Database name |
 | REDIS_HOST | localhost | Redis host |
-| REDIS_PORT | 6379 | Redis port |
 | EMBEDDING_MODEL | BAAI/bge-large-en-v1.5 | HuggingFace model |
-| EMBEDDING_DIMENSION | 1024 | Vector dimension |
-| CHUNK_SIZE | 512 | Default chunk size |
-| CHUNK_OVERLAP | 50 | Default chunk overlap |
-| MAX_FILE_SIZE_MB | 50 | Max upload size |
+| BM25_K_PARAM | 60 | RRF fusion constant |
+| OPENAI_API_KEY | — | For RAGAS evaluation (optional) |
+| LANGSMITH_API_KEY | — | For tracing (optional) |
+| LANGSMITH_PROJECT | rag-api | LangSmith project name |
+
+See `.env.example` for the full list.
 
 ## Roadmap
 
-- [x] **Phase 1** — Core scaffold, ingestion, dense retrieval, Docker
-- [ ] **Phase 2** — RAGAS evaluation pipeline, BM25 hybrid retrieval
-- [ ] **Phase 3** — LangSmith observability and tracing
-- [ ] **Phase 4** — AWS deployment (ECS + RDS)
+- [x] **Phase 1** — Core scaffold: FastAPI, ingestion, dense retrieval, Docker
+- [x] **Phase 2** — BM25 hybrid retrieval (RRF) + RAGAS evaluation pipeline
+- [x] **Phase 3** — LangSmith observability and tracing on all endpoints
+- [x] **Phase 4** — GCP deployment: Cloud Run + Cloud SQL + Terraform + CI/CD
 
 ## License
 
