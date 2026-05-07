@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production RAG System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c10;
+    --bg-card: #0d1117;
+    --bg-hover: #161b22;
+    --border: #21262d;
+    --border-glow: #00e5ff22;
+    --cyan: #00e5ff;
+    --cyan-dim: #00e5ff44;
+    --amber: #ffb300;
+    --green: #00e676;
+    --red: #ff5252;
+    --text: #e6edf3;
+    --text-muted: #7d8590;
+    --text-dim: #484f58;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius: 8px;
+    --glow: 0 0 20px #00e5ff18, 0 0 40px #00e5ff08;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── Layout ── */
+  .shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 32px 0 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .header-left h1 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .header-left h1 span { color: var(--cyan); }
+
+  .tagline {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  .status-dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .status-dot.offline { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+  .gh-link {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 12px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .gh-link:hover { color: var(--cyan); border-color: var(--cyan-dim); }
+  .gh-link svg { flex-shrink: 0; }
+
+  /* ── Section ── */
+  .section {
+    margin-top: 28px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--cyan-dim), transparent);
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: #2d333b; }
+
+  /* ── Drag Drop ── */
+  .drop-zone {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--cyan);
+    background: var(--border-glow);
+  }
+  .drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+  }
+
+  .drop-icon {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 0 auto 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+  }
+
+  .drop-text { color: var(--text-muted); font-size: 12px; }
+  .drop-text strong { color: var(--cyan); }
+  .drop-hint { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+  .file-selected { font-size: 11px; color: var(--green); margin-top: 8px; }
+
+  /* ── Form Controls ── */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  select, input[type=text], textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  select:focus, input[type=text]:focus, textarea:focus {
+    border-color: var(--cyan-dim);
+    box-shadow: 0 0 0 2px #00e5ff0a;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  input[type=range] {
+    flex: 1;
+    accent-color: var(--cyan);
+    height: 3px;
+    cursor: pointer;
+  }
+  .slider-val {
+    font-size: 11px;
+    color: var(--cyan);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 20px;
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary {
+    background: var(--cyan);
+    color: #000;
+  }
+  .btn-primary:hover { background: #33eaff; box-shadow: 0 0 16px #00e5ff44; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: #444c56; }
+
+  .btn-full { width: 100%; margin-top: 16px; }
+
+  /* ── Mode Toggle ── */
+  .mode-toggle {
+    display: flex;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 3px;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .mode-btn.active {
+    background: var(--cyan);
+    color: #000;
+    box-shadow: 0 0 10px #00e5ff33;
+  }
+
+  /* ── Progress Bar ── */
+  .progress-wrap {
+    margin-top: 12px;
+    display: none;
+  }
+  .progress-wrap.visible { display: block; }
+  .progress-track {
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--cyan);
+    border-radius: 1px;
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 6px var(--cyan);
+  }
+  .progress-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── Alert / Feedback ── */
+  .alert {
+    display: none;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 11px;
+    margin-top: 12px;
+    border: 1px solid;
+    animation: fadeUp 0.3s ease;
+  }
+  .alert.visible { display: flex; align-items: flex-start; gap: 8px; }
+  .alert-success { background: #00e67610; border-color: #00e67630; color: var(--green); }
+  .alert-error { background: #ff525210; border-color: #ff525230; color: var(--red); }
+  .alert-info { background: #00e5ff08; border-color: #00e5ff22; color: var(--cyan); }
+
+  /* ── Spinner ── */
+  .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .loading .spinner { display: inline-block; }
+  .loading .btn-label { opacity: 0.7; }
+
+  /* ── Results ── */
+  .results-area { margin-top: 0; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-dim);
+  }
+  .empty-state .empty-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+  .empty-state p { font-size: 11px; }
+
+  .result-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s, transform 0.1s;
+    animation: fadeUp 0.3s ease both;
+  }
+  .result-card:hover { border-color: #2d333b; transform: translateX(2px); }
+
+  .result-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .result-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid;
+    font-weight: 500;
+  }
+  .badge-page { background: #00e5ff08; border-color: var(--cyan-dim); color: var(--cyan); }
+  .badge-strategy { background: #ffb30008; border-color: #ffb30030; color: var(--amber); }
+  .badge-rank { background: #7d859008; border-color: #7d859030; color: var(--text-muted); }
+
+  .score-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .score-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .score-bar-wrap {
+    width: 80px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .score-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+  .score-high { background: var(--green); box-shadow: 0 0 4px var(--green); }
+  .score-mid { background: var(--amber); box-shadow: 0 0 4px var(--amber); }
+  .score-low { background: var(--red); box-shadow: 0 0 4px var(--red); }
+
+  .result-content {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    border-left: 2px solid var(--border);
+    padding-left: 10px;
+    max-height: 120px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: max-height 0.3s ease;
+  }
+  .result-content.expanded { max-height: 1000px; }
+  .result-content::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 30px;
+    background: linear-gradient(transparent, var(--bg));
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .result-content.expanded::after { opacity: 0; }
+
+  .result-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .source-name {
+    font-size: 10px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+  }
+  .expand-hint { font-size: 10px; color: var(--text-dim); cursor: pointer; }
+  .expand-hint:hover { color: var(--cyan); }
+
+  .results-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    font-size: 11px;
+  }
+  .results-summary .mode-tag {
+    background: var(--cyan-dim);
+    color: var(--cyan);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Evaluate ── */
+  .metric-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-name {
+    width: 160px;
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .metric-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .metric-bar {
+    height: 100%;
+    background: var(--cyan);
+    border-radius: 2px;
+    box-shadow: 0 0 6px var(--cyan);
+    width: 0%;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+  .metric-val {
+    width: 44px;
+    text-align: right;
+    font-size: 12px;
+    color: var(--cyan);
+  }
+  .metric-null { color: var(--text-dim); font-size: 11px; }
+
+  .llm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .llm-badge .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); }
+
+  /* ── Two-column ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .pulsing { animation: pulse 1.5s ease infinite; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="header-left">
+      <h1>Production <span>RAG</span> System</h1>
+      <p class="tagline">Hybrid BM25 + Dense Vector Retrieval · pgvector · RAGAS Evaluation</p>
+    </div>
+    <div class="header-right">
+      <div class="status-badge">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">checking...</span>
+      </div>
+      <a class="gh-link" href="https://github.com/PKMadhavan/Production-RAG-System-with-Evaluation-Framework" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/>
+        </svg>
+        GitHub
+      </a>
+    </div>
+  </header>
+
+  <!-- ── Upload ── -->
+  <div class="section">
+    <div class="section-label">01 · Ingest Document</div>
+    <div class="card">
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".pdf,.txt">
+        <div class="drop-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+        </div>
+        <p class="drop-text">Drop a file or <strong>browse</strong></p>
+        <p class="drop-hint">PDF or TXT · max 50 MB</p>
+        <p class="file-selected" id="fileSelected"></p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Chunking Strategy</label>
+          <select id="chunkStrategy">
+            <option value="fixed">fixed</option>
+            <option value="semantic">semantic</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Chunk Size — <span id="chunkSizeVal">512</span> chars</label>
+          <div class="slider-row">
+            <input type="range" id="chunkSize" min="100" max="2000" value="512" step="50">
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-wrap" id="uploadProgress">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-label"><span id="progressLabel">uploading...</span><span id="progressPct">0%</span></div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="uploadBtn" onclick="handleUpload()">
+        <span class="spinner"></span>
+        <span class="btn-label">Upload &amp; Ingest</span>
+      </button>
+
+      <div class="alert" id="uploadAlert"></div>
+    </div>
+  </div>
+
+  <!-- ── Query ── -->
+  <div class="section">
+    <div class="section-label">02 · Query</div>
+    <div class="card">
+      <div class="form-group">
+        <label>Question</label>
+        <input type="text" id="queryInput" placeholder="What does the document say about..." onkeydown="if(event.key==='Enter')handleQuery()">
+      </div>
+
+      <div class="form-row" style="margin-top:14px;">
+        <div class="form-group">
+          <label>Retrieval Mode</label>
+          <div class="mode-toggle">
+            <button class="mode-btn" onclick="setMode('dense')">Dense</button>
+            <button class="mode-btn" onclick="setMode('sparse')">Sparse</button>
+            <button class="mode-btn active" onclick="setMode('hybrid')">Hybrid</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Top K — <span id="topKVal">5</span> results</label>
+          <div class="slider-row">
+            <input type="range" id="topK" min="1" max="20" value="5">
+            <span class="slider-val" id="topKDisplay">5</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="queryBtn" onclick="handleQuery()">
+        <span class="spinner"></span>
+        <span class="btn-label">Search</span>
+      </button>
+
+      <div class="alert" id="queryAlert"></div>
+    </div>
+  </div>
+
+  <!-- ── Results ── -->
+  <div class="section">
+    <div class="section-label">03 · Results</div>
+    <div class="results-area" id="resultsArea">
+      <div class="empty-state">
+        <div class="empty-icon">⌕</div>
+        <p>Run a query to see retrieved chunks here</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Evaluate ── -->
+  <div class="section">
+    <div class="section-label">04 · RAGAS Evaluation</div>
+    <div class="card">
+      <div class="two-col">
+        <div class="form-group">
+          <label>Question</label>
+          <input type="text" id="evalQuestion" placeholder="Enter evaluation question...">
+        </div>
+        <div class="form-group">
+          <label>Ground Truth <span style="color:var(--text-dim)">(optional)</span></label>
+          <input type="text" id="evalGround" placeholder="Expected answer...">
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="evalBtn" onclick="handleEval()">
+        <span class="spinner"></span>
+        <span class="btn-label">Run RAGAS Evaluation</span>
+      </button>
+
+      <div class="alert" id="evalAlert"></div>
+
+      <div id="evalResults" style="margin-top:16px; display:none;">
+        <div class="llm-badge" id="llmBadge">
+          <div class="dot"></div>
+          <span id="llmLabel">evaluating...</span>
+        </div>
+        <div id="metricsContainer"></div>
+        <div style="margin-top:10px; font-size:10px; color:var(--text-dim); text-align:right;" id="evalTime"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = 'https://rag-api-rp6ga3bkwa-uc.a.run.app';
+let selectedMode = 'hybrid';
+let selectedFile = null;
+
+// ── Status Check ──
+async function checkStatus() {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  try {
+    const r = await fetch(`${API}/health`, { signal: AbortSignal.timeout(8000) });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      dot.className = 'status-dot online';
+      txt.textContent = 'live';
+    } else throw new Error();
+  } catch {
+    dot.className = 'status-dot offline';
+    txt.textContent = 'offline';
+  }
+}
+checkStatus();
+setInterval(checkStatus, 30000);
+
+// ── Sliders ──
+document.getElementById('chunkSize').addEventListener('input', e => {
+  document.getElementById('chunkSizeVal').textContent = e.target.value;
+});
+document.getElementById('topK').addEventListener('input', e => {
+  document.getElementById('topKVal').textContent = e.target.value;
+  document.getElementById('topKDisplay').textContent = e.target.value;
+});
+
+// ── File Drop ──
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) setFile(f);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]); });
+
+function setFile(f) {
+  selectedFile = f;
+  const sel = document.getElementById('fileSelected');
+  sel.textContent = `✓ ${f.name} (${(f.size/1024).toFixed(1)} KB)`;
+  hideAlert('uploadAlert');
+}
+
+// ── Mode Toggle ──
+function setMode(m) {
+  selectedMode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === m);
+  });
+}
+
+// ── Upload ──
+async function handleUpload() {
+  if (!selectedFile) { showAlert('uploadAlert', 'error', 'Please select a file first.'); return; }
+
+  const btn = document.getElementById('uploadBtn');
+  const prog = document.getElementById('uploadProgress');
+  const fill = document.getElementById('progressFill');
+  const pct = document.getElementById('progressPct');
+  const label = document.getElementById('progressLabel');
+
+  setLoading(btn, true);
+  prog.classList.add('visible');
+  hideAlert('uploadAlert');
+
+  // Animate progress bar
+  let p = 0;
+  const interval = setInterval(() => {
+    p = Math.min(p + Math.random() * 12, 88);
+    fill.style.width = p + '%';
+    pct.textContent = Math.floor(p) + '%';
+  }, 200);
+
+  try {
+    const form = new FormData();
+    form.append('file', selectedFile);
+    form.append('chunking_strategy', document.getElementById('chunkStrategy').value);
+    form.append('chunk_size', document.getElementById('chunkSize').value);
+    form.append('chunk_overlap', '50');
+
+    const r = await fetch(`${API}/ingest/`, { method: 'POST', body: form });
+    clearInterval(interval);
+    fill.style.width = '100%'; pct.textContent = '100%';
+
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.detail || `HTTP ${r.status}`);
+    }
+    const d = await r.json();
+    label.textContent = 'complete';
+    showAlert('uploadAlert', 'success',
+      `✓ Ingested "${selectedFile.name}" — ${d.chunks_created} chunks created · doc_id: ${d.document_id?.slice(0,8)}...`);
+  } catch (err) {
+    clearInterval(interval);
+    fill.style.width = '0%'; pct.textContent = '';
+    prog.classList.remove('visible');
+    showAlert('uploadAlert', 'error', `Upload failed: ${err.message}`);
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+// ── Query ──
+async function handleQuery() {
+  const q = document.getElementById('queryInput').value.trim();
+  if (!q) { showAlert('queryAlert', 'error', 'Enter a question first.'); return; }
+
+  const btn = document.getElementById('queryBtn');
+  setLoading(btn, true);
+  hideAlert('queryAlert');
+
+  try {
+    const r = await fetch(`${API}/query/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: q,
+        retrieval_mode: selectedMode,
+        top_k: parseInt(document.getElementById('topK').value),
+        score_threshold: 0,
+      })
+    });
+
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.detail || `HTTP ${r.status}`);
+    }
+    const d = await r.json();
+    renderResults(d, q);
+  } catch (err) {
+    showAlert('queryAlert', 'error', `Query failed: ${err.message}`);
+    document.getElementById('resultsArea').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><p>${err.message}</p></div>`;
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+// ── Render Results ──
+function renderResults(data, query) {
+  const area = document.getElementById('resultsArea');
+
+  if (!data.results || data.results.length === 0) {
+    area.innerHTML = `<div class="empty-state"><div class="empty-icon">∅</div><p>No results found. Try ingesting a document first.</p></div>`;
+    return;
+  }
+
+  const maxScore = Math.max(...data.results.map(r => r.score), 0.0001);
+
+  let html = `<div class="results-summary">
+    <span style="color:var(--text-muted)">${data.num_results} chunks · <span style="color:var(--text)">${(data.processing_time_ms||0).toFixed(0)}ms</span></span>
+    <div style="display:flex;gap:8px;align-items:center">
+      ${data.cached ? '<span style="font-size:10px;color:var(--amber)">⚡ cached</span>' : ''}
+      <span class="mode-tag">${selectedMode}</span>
+    </div>
+  </div>`;
+
+  data.results.forEach((chunk, i) => {
+    const score = chunk.score || 0;
+    const pct = Math.min((score / maxScore) * 100, 100);
+    const scoreClass = pct > 65 ? 'score-high' : pct > 30 ? 'score-mid' : 'score-low';
+    const src = chunk.metadata?.source || 'unknown';
+    const page = chunk.metadata?.page_number;
+    const strategy = chunk.metadata?.chunking_strategy || '';
+    const content = escapeHtml(chunk.content || '');
+
+    html += `<div class="result-card" style="animation-delay:${i*0.05}s">
+      <div class="result-header">
+        <div class="result-meta">
+          <span class="badge badge-rank">#${i+1}</span>
+          ${page != null ? `<span class="badge badge-page">p.${page}</span>` : ''}
+          ${strategy ? `<span class="badge badge-strategy">${strategy}</span>` : ''}
+        </div>
+        <div class="score-display">
+          <span class="score-value">${score.toFixed(4)}</span>
+          <div class="score-bar-wrap">
+            <div class="score-bar ${scoreClass}" style="width:${pct}%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="result-content" id="content-${i}" onclick="toggleExpand(${i})">${content}</div>
+      <div class="result-footer">
+        <span class="source-name" title="${src}">${src}</span>
+        <span class="expand-hint" onclick="toggleExpand(${i})">click to expand</span>
+      </div>
+    </div>`;
+  });
+
+  area.innerHTML = html;
+
+  // Animate score bars
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.score-bar').forEach(b => {
+      const w = b.style.width; b.style.width = '0%';
+      setTimeout(() => b.style.width = w, 50);
+    });
+  });
+}
+
+function toggleExpand(i) {
+  document.getElementById(`content-${i}`)?.classList.toggle('expanded');
+}
+
+// ── Evaluate ──
+async function handleEval() {
+  const q = document.getElementById('evalQuestion').value.trim();
+  if (!q) { showAlert('evalAlert', 'error', 'Enter a question for evaluation.'); return; }
+
+  const btn = document.getElementById('evalBtn');
+  setLoading(btn, true);
+  hideAlert('evalAlert');
+  document.getElementById('evalResults').style.display = 'none';
+
+  const ground = document.getElementById('evalGround').value.trim();
+  const sample = { question: q };
+  if (ground) sample.ground_truth = ground;
+
+  try {
+    const r = await fetch(`${API}/evaluate/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        samples: [sample],
+        retrieval_mode: selectedMode,
+        top_k: 5,
+      })
+    });
+
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.detail || `HTTP ${r.status}`);
+    }
+
+    const d = await r.json();
+    renderEval(d);
+  } catch (err) {
+    showAlert('evalAlert', 'error', `Evaluation failed: ${err.message}`);
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+function renderEval(data) {
+  const scores = data.aggregate_scores || {};
+  document.getElementById('llmLabel').textContent = `llm: ${data.llm_used || 'extractive'}`;
+  document.getElementById('evalTime').textContent = `processed in ${(data.processing_time_ms||0).toFixed(0)}ms · ${data.num_samples} sample(s)`;
+
+  const metrics = [
+    { key: 'faithfulness', label: 'Faithfulness' },
+    { key: 'answer_relevancy', label: 'Answer Relevancy' },
+    { key: 'context_recall', label: 'Context Recall' },
+    { key: 'context_precision', label: 'Context Precision' },
+  ];
+
+  let html = '';
+  metrics.forEach(m => {
+    const v = scores[m.key];
+    const pct = v != null ? (v * 100).toFixed(1) : null;
+    html += `<div class="metric-row">
+      <div class="metric-name">${m.label}</div>
+      <div class="metric-bar-wrap">
+        <div class="metric-bar" id="bar-${m.key}" style="width:0%"></div>
+      </div>
+      <div class="metric-val">
+        ${pct != null ? `${pct}%` : '<span class="metric-null">—</span>'}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('metricsContainer').innerHTML = html;
+  document.getElementById('evalResults').style.display = 'block';
+
+  requestAnimationFrame(() => {
+    metrics.forEach(m => {
+      const v = scores[m.key];
+      if (v != null) {
+        setTimeout(() => {
+          const bar = document.getElementById(`bar-${m.key}`);
+          if (bar) bar.style.width = (v * 100) + '%';
+        }, 100);
+      }
+    });
+  });
+}
+
+// ── Helpers ──
+function setLoading(btn, on) {
+  btn.classList.toggle('loading', on);
+  btn.disabled = on;
+}
+
+function showAlert(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = `alert alert-${type} visible`;
+  el.innerHTML = `<span>${msg}</span>`;
+}
+
+function hideAlert(id) {
+  document.getElementById(id).className = 'alert';
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
