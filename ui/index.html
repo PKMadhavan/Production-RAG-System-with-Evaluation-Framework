@@ -3,1058 +3,1941 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Production RAG System</title>
+<title>Production RAG System — Final Submission</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #080c10;
-    --bg-card: #0d1117;
-    --bg-hover: #161b22;
-    --border: #21262d;
-    --border-glow: #00e5ff22;
-    --cyan: #00e5ff;
-    --cyan-dim: #00e5ff44;
-    --amber: #ffb300;
-    --green: #00e676;
-    --red: #ff5252;
-    --text: #e6edf3;
-    --text-muted: #7d8590;
-    --text-dim: #484f58;
-    --font-display: 'Syne', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-    --radius: 8px;
-    --glow: 0 0 20px #00e5ff18, 0 0 40px #00e5ff08;
-  }
+/* ─── TOKENS ─────────────────────────────────────────────── */
+:root {
+  --bg:       #06090f;
+  --bg1:      #0b0f1a;
+  --bg2:      #111827;
+  --border:   #1e2a3a;
+  --border2:  #263347;
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  --cyan:     #00d4ff;
+  --cyan2:    #00a8cc;
+  --cyan-dim: rgba(0,212,255,.12);
+  --cyan-glow:rgba(0,212,255,.25);
+  --amber:    #f59e0b;
+  --green:    #10b981;
+  --red:      #ef4444;
+  --purple:   #8b5cf6;
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    line-height: 1.6;
-    min-height: 100vh;
-    background-image:
-      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
+  --text:     #e2e8f0;
+  --text2:    #94a3b8;
+  --text3:    #475569;
 
-  /* ── Scrollbar ── */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  --mono:     'Space Mono', monospace;
+  --display:  'Bebas Neue', sans-serif;
+  --body:     'DM Sans', sans-serif;
 
-  /* ── Layout ── */
-  .shell {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 24px 80px;
-  }
+  --nav-h:    56px;
+  --r:        6px;
+}
 
-  /* ── Header ── */
-  header {
-    padding: 32px 0 28px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    animation: fadeDown 0.6s ease both;
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:14px;
+  line-height:1.6;
+  overflow-x:hidden;
+}
 
-  .header-left h1 {
-    font-family: var(--font-display);
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: var(--text);
-    line-height: 1.1;
-  }
+/* scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
-  .header-left h1 span { color: var(--cyan); }
+/* ─── NAV ───────────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;
+  height:var(--nav-h);
+  background:rgba(6,9,15,.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 32px;gap:0;
+  z-index:1000;
+}
+.nav-logo{
+  font-family:var(--display);
+  font-size:22px;
+  letter-spacing:2px;
+  color:var(--cyan);
+  margin-right:40px;
+  flex-shrink:0;
+}
+.nav-links{
+  display:flex;gap:4px;flex:1;
+}
+.nav-link{
+  padding:6px 14px;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text2);
+  text-decoration:none;
+  border-radius:var(--r);
+  transition:.15s;
+  letter-spacing:.5px;
+}
+.nav-link:hover{color:var(--text);background:var(--bg2)}
+.nav-link.active{color:var(--cyan)}
 
-  .tagline {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 4px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
+.nav-right{
+  display:flex;align-items:center;gap:12px;margin-left:auto;
+}
+.api-toggle{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg1);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:4px 8px 4px 12px;
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text2);
+}
+.api-toggle select{
+  background:transparent;
+  border:none;
+  color:var(--cyan);
+  font-family:var(--mono);
+  font-size:10px;
+  outline:none;
+  cursor:pointer;
+  max-width:130px;
+}
+.api-toggle select option{background:var(--bg1)}
+.pulse-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--text3);
+  transition:.3s;
+  flex-shrink:0;
+}
+.pulse-dot.on{ background:var(--green);box-shadow:0 0 8px var(--green);animation:pulseGlow 2s ease infinite}
+.pulse-dot.off{background:var(--red);box-shadow:0 0 6px var(--red)}
+@keyframes pulseGlow{0%,100%{opacity:1}50%{opacity:.5}}
+#navStatus{font-size:10px;letter-spacing:.3px}
 
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-shrink: 0;
-  }
+/* ─── LAYOUT ────────────────────────────────────────────── */
+.page{padding-top:var(--nav-h)}
+section{padding:80px 0}
+.container{max-width:1080px;margin:0 auto;padding:0 32px}
+.section-tag{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--cyan);
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-tag::before{
+  content:'';width:24px;height:1px;background:var(--cyan);
+}
+h2{
+  font-family:var(--display);
+  font-size:clamp(36px,5vw,56px);
+  letter-spacing:2px;
+  line-height:1;
+  color:var(--text);
+  margin-bottom:8px;
+}
+h3{
+  font-family:var(--body);
+  font-size:16px;
+  font-weight:600;
+  color:var(--text);
+}
 
-  .status-badge {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.3px;
-  }
+/* ─── HERO ──────────────────────────────────────────────── */
+#hero{
+  min-height:100vh;
+  display:flex;align-items:center;
+  position:relative;
+  overflow:hidden;
+  padding:0;
+}
+.hero-grid-bg{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;
+}
+.hero-glow{
+  position:absolute;top:-200px;right:-200px;
+  width:700px;height:700px;
+  background:radial-gradient(circle,rgba(0,212,255,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-glow2{
+  position:absolute;bottom:-300px;left:-100px;
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-inner{
+  position:relative;z-index:1;
+  padding:0 32px;
+  max-width:1080px;
+  margin:0 auto;
+  width:100%;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--cyan-dim);
+  border:1px solid rgba(0,212,255,.2);
+  border-radius:20px;
+  padding:5px 14px;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--cyan);
+  letter-spacing:1px;
+  margin-bottom:28px;
+  animation:fadeUp .6s ease both;
+}
+.hero-eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--cyan)}
+.hero-title{
+  font-family:var(--display);
+  font-size:clamp(56px,9vw,110px);
+  letter-spacing:4px;
+  line-height:.92;
+  color:var(--text);
+  margin-bottom:28px;
+  animation:fadeUp .6s .1s ease both;
+}
+.hero-title .hl{
+  color:transparent;
+  -webkit-text-stroke:2px var(--cyan);
+  display:inline;
+}
+.hero-desc{
+  font-family:var(--body);
+  font-size:16px;
+  color:var(--text2);
+  max-width:560px;
+  line-height:1.7;
+  margin-bottom:40px;
+  animation:fadeUp .6s .2s ease both;
+}
+.hero-actions{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  animation:fadeUp .6s .3s ease both;
+  margin-bottom:60px;
+}
+.btn-hero{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 28px;
+  background:var(--cyan);
+  color:#000;
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:700;
+  border-radius:var(--r);
+  text-decoration:none;
+  letter-spacing:.5px;
+  transition:.15s;
+  border:none;cursor:pointer;
+}
+.btn-hero:hover{background:#33dbff;box-shadow:0 0 24px rgba(0,212,255,.4);transform:translateY(-1px)}
+.btn-hero-ghost{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 24px;
+  background:transparent;
+  color:var(--text2);
+  font-family:var(--mono);
+  font-size:12px;
+  border:1px solid var(--border2);
+  border-radius:var(--r);
+  text-decoration:none;
+  letter-spacing:.5px;
+  transition:.15s;
+}
+.btn-hero-ghost:hover{color:var(--text);border-color:var(--text3)}
 
-  .status-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--text-dim);
-    transition: background 0.3s, box-shadow 0.3s;
-  }
-  .status-dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
-  .status-dot.offline { background: var(--red); box-shadow: 0 0 8px var(--red); }
+.hero-stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1px;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  background:var(--border);
+  animation:fadeUp .6s .4s ease both;
+}
+@media(max-width:640px){.hero-stats{grid-template-columns:repeat(2,1fr)}}
+.stat-cell{
+  background:var(--bg1);
+  padding:20px 24px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.stat-num{
+  font-family:var(--display);
+  font-size:32px;
+  letter-spacing:1px;
+  color:var(--text);
+  line-height:1;
+}
+.stat-num span{color:var(--cyan)}
+.stat-label{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:1.5px;
+  color:var(--text3);
+  text-transform:uppercase;
+}
 
-  .gh-link {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 12px;
-    padding: 6px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-card);
-    transition: color 0.2s, border-color 0.2s;
-  }
-  .gh-link:hover { color: var(--cyan); border-color: var(--cyan-dim); }
-  .gh-link svg { flex-shrink: 0; }
+/* ─── ARCHITECTURE ───────────────────────────────────────── */
+#architecture{background:var(--bg1)}
+.arch-diagram{
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  background:var(--bg);
+  margin-top:40px;
+}
+.arch-diagram svg{width:100%;height:auto;display:block}
+.flow-cards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-top:32px;
+}
+@media(max-width:700px){.flow-cards{grid-template-columns:1fr}}
+.flow-card{
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:20px;
+  background:var(--bg);
+  position:relative;
+  overflow:hidden;
+  transition:.2s;
+}
+.flow-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.flow-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;
+  height:2px;
+  background:var(--flow-color,var(--cyan));
+}
+.flow-icon{
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:12px;
+  font-size:16px;
+  background:var(--flow-dim,var(--cyan-dim));
+  border:1px solid var(--flow-border,rgba(0,212,255,.2));
+}
+.flow-title{font-size:13px;font-weight:600;margin-bottom:6px}
+.flow-desc{font-size:12px;color:var(--text2);line-height:1.6}
 
-  /* ── Section ── */
-  .section {
-    margin-top: 28px;
-    animation: fadeUp 0.5s ease both;
-  }
-  .section:nth-child(2) { animation-delay: 0.1s; }
-  .section:nth-child(3) { animation-delay: 0.2s; }
-  .section:nth-child(4) { animation-delay: 0.3s; }
-  .section:nth-child(5) { animation-delay: 0.4s; }
+/* ─── TECH STACK ─────────────────────────────────────────── */
+#stack{padding:80px 0}
+.tech-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:12px;
+  margin-top:40px;
+}
+.tech-card{
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:16px;
+  background:var(--bg1);
+  display:flex;flex-direction:column;gap:8px;
+  transition:.2s;
+  cursor:default;
+}
+.tech-card:hover{border-color:var(--border2);background:var(--bg2)}
+.tech-icon{font-size:22px}
+.tech-name{font-size:13px;font-weight:600;color:var(--text)}
+.tech-role{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.tech-tag{
+  display:inline-block;
+  font-size:9px;
+  font-family:var(--mono);
+  letter-spacing:1px;
+  padding:2px 8px;
+  border-radius:3px;
+  text-transform:uppercase;
+  align-self:flex-start;
+  margin-top:2px;
+}
 
-  .section-label {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--cyan);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, var(--cyan-dim), transparent);
-  }
+/* ─── DEMO ───────────────────────────────────────────────── */
+#demo{background:var(--bg1)}
+.demo-tabs{
+  display:flex;gap:4px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:32px;
+}
+.demo-tab{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.5px;
+  padding:10px 20px;
+  color:var(--text2);
+  background:transparent;
+  border:none;cursor:pointer;
+  border-bottom:2px solid transparent;
+  margin-bottom:-1px;
+  transition:.15s;
+  display:flex;align-items:center;gap:7px;
+}
+.demo-tab:hover{color:var(--text)}
+.demo-tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.tab-num{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--bg2);
+  font-size:9px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text3);
+  flex-shrink:0;
+}
+.demo-tab.active .tab-num{background:var(--cyan-dim);color:var(--cyan)}
+.demo-panel{display:none}
+.demo-panel.active{display:block}
 
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    transition: border-color 0.2s;
-  }
-  .card:hover { border-color: #2d333b; }
+/* ─── CARDS ─────────────────────────────────────────────── */
+.card{
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:24px;
+}
+.card+.card{margin-top:16px}
+.card-label{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-label::after{content:'';flex:1;height:1px;background:var(--border)}
 
-  /* ── Drag Drop ── */
-  .drop-zone {
-    border: 1px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 36px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    position: relative;
-  }
-  .drop-zone:hover, .drop-zone.drag-over {
-    border-color: var(--cyan);
-    background: var(--border-glow);
-  }
-  .drop-zone input[type=file] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
-  }
+/* ─── FORMS ─────────────────────────────────────────────── */
+.field{display:flex;flex-direction:column;gap:6px}
+label.lbl{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--text2);
+}
+input[type=text],input[type=number],textarea,select{
+  background:var(--bg1);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:12px;
+  padding:10px 14px;
+  outline:none;
+  transition:.15s;
+  width:100%;
+}
+input[type=text]:focus,textarea:focus,select:focus,input[type=number]:focus{
+  border-color:rgba(0,212,255,.4);
+  box-shadow:0 0 0 3px rgba(0,212,255,.06);
+}
+textarea{resize:vertical;min-height:72px}
+select option{background:var(--bg1)}
+input[type=range]{
+  width:100%;accent-color:var(--cyan);height:3px;cursor:pointer;
+}
+.range-row{display:flex;align-items:center;gap:10px}
+.range-val{
+  font-family:var(--mono);font-size:12px;color:var(--cyan);
+  min-width:30px;text-align:right;flex-shrink:0;
+}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
 
-  .drop-icon {
-    width: 36px; height: 36px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin: 0 auto 12px;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--text-muted);
-  }
+/* ─── BUTTONS ───────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:10px 22px;
+  border-radius:var(--r);
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.5px;
+  cursor:pointer;
+  border:none;
+  transition:.15s;
+}
+.btn-primary{background:var(--cyan);color:#000}
+.btn-primary:hover:not(:disabled){background:#33dbff;box-shadow:0 0 20px rgba(0,212,255,.3)}
+.btn-primary:active:not(:disabled){transform:scale(.98)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-full{width:100%;margin-top:16px}
+.btn-sm{padding:6px 14px;font-size:11px}
+.spinner{
+  width:12px;height:12px;
+  border:2px solid transparent;
+  border-top-color:currentColor;
+  border-radius:50%;
+  display:none;
+  animation:spin .6s linear infinite;
+}
+.loading .spinner{display:inline-block}
+.loading .btn-txt{opacity:.7}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  .drop-text { color: var(--text-muted); font-size: 12px; }
-  .drop-text strong { color: var(--cyan); }
-  .drop-hint { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
-  .file-selected { font-size: 11px; color: var(--green); margin-top: 8px; }
+/* ─── DROP ZONE ─────────────────────────────────────────── */
+.drop{
+  border:1px dashed var(--border2);
+  border-radius:var(--r);
+  padding:40px 24px;
+  text-align:center;
+  cursor:pointer;
+  transition:.2s;
+  position:relative;
+}
+.drop:hover,.drop.over{border-color:var(--cyan);background:var(--cyan-dim)}
+.drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.drop-icon{
+  width:40px;height:40px;
+  border:1px solid var(--border2);
+  border-radius:10px;
+  margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text3);
+  transition:.2s;
+}
+.drop:hover .drop-icon,.drop.over .drop-icon{border-color:var(--cyan);color:var(--cyan)}
+.drop-text{font-size:13px;color:var(--text2)}
+.drop-text strong{color:var(--cyan)}
+.drop-hint{font-size:11px;color:var(--text3);margin-top:4px}
+.drop-selected{font-size:11px;color:var(--green);margin-top:10px;display:none}
+.drop-selected.show{display:block}
 
-  /* ── Form Controls ── */
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 16px;
-  }
-  @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+/* ─── PROGRESS ──────────────────────────────────────────── */
+.progress{margin-top:14px;display:none}
+.progress.show{display:block}
+.progress-track{height:2px;background:var(--border);border-radius:1px;overflow:hidden}
+.progress-fill{height:100%;background:var(--cyan);box-shadow:0 0 6px var(--cyan);width:0;transition:width .3s}
+.progress-info{
+  display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:5px;
+}
 
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
+/* ─── ALERT ─────────────────────────────────────────────── */
+.alert{
+  display:none;padding:10px 14px;border-radius:var(--r);
+  font-size:12px;margin-top:12px;border:1px solid;
+  animation:fadeUp .25s ease;
+}
+.alert.show{display:flex;align-items:flex-start;gap:8px}
+.alert-ok{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.25);color:var(--green)}
+.alert-err{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:var(--red)}
+.alert-info{background:var(--cyan-dim);border-color:rgba(0,212,255,.25);color:var(--cyan)}
 
-  label {
-    font-size: 10px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
+/* ─── MODE TOGGLE ───────────────────────────────────────── */
+.mode-pills{
+  display:flex;gap:4px;
+  background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:3px;
+}
+.mode-pill{
+  flex:1;padding:7px 12px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.5px;
+  background:transparent;color:var(--text2);border:none;cursor:pointer;
+  border-radius:4px;transition:.15s;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.mode-pill:hover{color:var(--text)}
+.mode-pill.active{background:var(--cyan);color:#000;box-shadow:0 0 12px rgba(0,212,255,.25)}
+.mode-desc{
+  font-family:var(--mono);font-size:10px;color:var(--text3);
+  margin-top:6px;min-height:16px;transition:.2s;
+}
 
-  select, input[type=text], textarea {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 8px 12px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    width: 100%;
-  }
-  select:focus, input[type=text]:focus, textarea:focus {
-    border-color: var(--cyan-dim);
-    box-shadow: 0 0 0 2px #00e5ff0a;
-  }
-  textarea { resize: vertical; min-height: 60px; }
+/* ─── RESULTS ───────────────────────────────────────────── */
+.results-wrap{margin-top:24px}
+.results-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;
+  background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);
+  margin-bottom:12px;
+  font-family:var(--mono);font-size:11px;
+  gap:12px;flex-wrap:wrap;
+}
+.results-header .mode-badge{
+  padding:3px 10px;border-radius:3px;font-size:10px;letter-spacing:.5px;
+  background:var(--cyan-dim);border:1px solid rgba(0,212,255,.2);color:var(--cyan);
+}
+.results-header .cached-badge{
+  font-size:10px;color:var(--amber);display:none;
+}
+.results-header .cached-badge.show{display:inline}
+.empty-state{
+  text-align:center;padding:56px 24px;color:var(--text3);
+}
+.empty-icon{font-size:28px;margin-bottom:12px;opacity:.5}
+.empty-state p{font-size:12px;font-family:var(--mono)}
 
-  .slider-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 4px;
-  }
-  input[type=range] {
-    flex: 1;
-    accent-color: var(--cyan);
-    height: 3px;
-    cursor: pointer;
-  }
-  .slider-val {
-    font-size: 11px;
-    color: var(--cyan);
-    min-width: 36px;
-    text-align: right;
-  }
+.result-card{
+  border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;margin-bottom:10px;
+  background:var(--bg1);
+  animation:fadeUp .25s ease both;
+  transition:border-color .2s,transform .1s;
+}
+.result-card:hover{border-color:var(--border2);transform:translateX(2px)}
+.result-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.result-badges{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.rbadge{
+  font-family:var(--mono);font-size:9px;letter-spacing:.5px;padding:2px 8px;
+  border-radius:3px;border:1px solid;text-transform:uppercase;
+}
+.rb-rank{background:rgba(148,163,184,.06);border-color:rgba(148,163,184,.2);color:var(--text2)}
+.rb-page{background:var(--cyan-dim);border-color:rgba(0,212,255,.2);color:var(--cyan)}
+.rb-strat{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2);color:var(--amber)}
+.score-col{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.score-num{font-family:var(--mono);font-size:13px;color:var(--text)}
+.score-bar-track{width:72px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.s-hi{background:var(--green);box-shadow:0 0 4px var(--green)}
+.s-md{background:var(--amber);box-shadow:0 0 4px var(--amber)}
+.s-lo{background:var(--red);box-shadow:0 0 4px var(--red)}
 
-  /* ── Buttons ── */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 9px 20px;
-    border-radius: var(--radius);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: all 0.15s;
-    letter-spacing: 0.3px;
-    position: relative;
-    overflow: hidden;
-  }
-  .btn-primary {
-    background: var(--cyan);
-    color: #000;
-  }
-  .btn-primary:hover { background: #33eaff; box-shadow: 0 0 16px #00e5ff44; }
-  .btn-primary:active { transform: scale(0.98); }
-  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.result-body{
+  font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.75;
+  border-left:2px solid var(--border);padding-left:10px;
+  max-height:110px;overflow:hidden;position:relative;cursor:pointer;
+  transition:max-height .3s ease;
+}
+.result-body.expanded{max-height:800px}
+.result-body::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:28px;
+  background:linear-gradient(transparent,var(--bg1));transition:opacity .3s;
+}
+.result-body.expanded::after{opacity:0}
+.result-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.src-name{font-family:var(--mono);font-size:10px;color:var(--text3);
+  max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.expand-btn{font-family:var(--mono);font-size:10px;color:var(--text3);cursor:pointer;border:none;background:none;padding:0}
+.expand-btn:hover{color:var(--cyan)}
 
-  .btn-ghost {
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover { color: var(--text); border-color: #444c56; }
+/* ─── COMPARISON ────────────────────────────────────────── */
+.compare-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;
+}
+@media(max-width:800px){.compare-grid{grid-template-columns:1fr}}
+.compare-col{
+  border:1px solid var(--border);border-radius:var(--r);overflow:hidden;
+}
+.compare-col-head{
+  background:var(--bg2);padding:10px 14px;
+  font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.compare-col-body{padding:10px;min-height:120px;font-family:var(--mono);font-size:11px;color:var(--text2)}
+.compare-result{padding:8px 10px;border:1px solid var(--border);border-radius:4px;margin-bottom:6px;background:var(--bg)}
+.compare-score{font-size:10px;color:var(--cyan);float:right}
+.compare-txt{font-size:10px;color:var(--text2);margin-top:4px;
+  overflow:hidden;max-height:40px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 
-  .btn-full { width: 100%; margin-top: 16px; }
+/* ─── HISTORY ───────────────────────────────────────────── */
+.history-wrap{
+  border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px;
+}
+.history-head{
+  background:var(--bg2);padding:10px 14px;
+  font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.history-list{max-height:140px;overflow-y:auto}
+.history-item{
+  padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;
+  display:flex;align-items:center;gap:10px;transition:.15s;
+}
+.history-item:last-child{border-bottom:none}
+.history-item:hover{background:var(--bg2)}
+.history-q{font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-meta{font-family:var(--mono);font-size:10px;color:var(--text3);flex-shrink:0}
+.history-empty{padding:16px 14px;font-family:var(--mono);font-size:11px;color:var(--text3);text-align:center}
 
-  /* ── Mode Toggle ── */
-  .mode-toggle {
-    display: flex;
-    gap: 4px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 3px;
-  }
-  .mode-btn {
-    flex: 1;
-    padding: 6px 10px;
-    border-radius: 5px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    transition: all 0.15s;
-    letter-spacing: 0.5px;
-  }
-  .mode-btn.active {
-    background: var(--cyan);
-    color: #000;
-    box-shadow: 0 0 10px #00e5ff33;
-  }
+/* ─── EVALUATION ─────────────────────────────────────────── */
+.eval-metrics{margin-top:20px}
+.metric-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--border);
+}
+.metric-row:last-child{border-bottom:none}
+.metric-name{
+  width:170px;flex-shrink:0;
+  font-size:13px;color:var(--text2);
+}
+.metric-bar-wrap{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.metric-bar{height:100%;background:var(--cyan);box-shadow:0 0 6px var(--cyan);width:0;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.metric-val{
+  width:52px;text-align:right;
+  font-family:var(--mono);font-size:13px;color:var(--cyan);
+}
+.metric-null{color:var(--text3);font-size:12px}
+.eval-meta{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--bg2);border-radius:var(--r);
+  font-family:var(--mono);font-size:11px;color:var(--text2);
+  margin-bottom:4px;
+}
+.eval-llm{display:flex;align-items:center;gap:6px}
+.eval-llm-dot{width:5px;height:5px;border-radius:50%;background:var(--amber)}
 
-  /* ── Progress Bar ── */
-  .progress-wrap {
-    margin-top: 12px;
-    display: none;
-  }
-  .progress-wrap.visible { display: block; }
-  .progress-track {
-    height: 2px;
-    background: var(--border);
-    border-radius: 1px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    background: var(--cyan);
-    border-radius: 1px;
-    width: 0%;
-    transition: width 0.3s ease;
-    box-shadow: 0 0 6px var(--cyan);
-  }
-  .progress-label {
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-top: 5px;
-    display: flex;
-    justify-content: space-between;
-  }
+.sample-results{margin-top:20px}
+.sample-card{
+  border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px;
+  animation:fadeUp .3s ease both;
+}
+.sample-head{
+  background:var(--bg2);padding:10px 16px;
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+}
+.sample-q{flex:1;font-size:13px;color:var(--text)}
+.sample-scores{display:flex;gap:10px;flex-shrink:0}
+.s-chip{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;background:var(--bg1);border:1px solid var(--border);color:var(--text2)}
+.s-chip span{color:var(--cyan)}
+.sample-body{padding:16px;display:none;border-top:1px solid var(--border)}
+.sample-body.open{display:block}
+.sample-answer{
+  font-size:12px;color:var(--text2);line-height:1.7;
+  padding:10px 12px;background:var(--bg1);border-radius:var(--r);margin-bottom:12px;
+  border-left:2px solid var(--cyan);
+}
+.sample-ctx{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:4px}
+.ctx-item{
+  font-size:11px;color:var(--text2);
+  padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:4px;margin-bottom:6px;
+  overflow:hidden;text-overflow:ellipsis;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
 
-  /* ── Alert / Feedback ── */
-  .alert {
-    display: none;
-    padding: 10px 14px;
-    border-radius: var(--radius);
-    font-size: 11px;
-    margin-top: 12px;
-    border: 1px solid;
-    animation: fadeUp 0.3s ease;
-  }
-  .alert.visible { display: flex; align-items: flex-start; gap: 8px; }
-  .alert-success { background: #00e67610; border-color: #00e67630; color: var(--green); }
-  .alert-error { background: #ff525210; border-color: #ff525230; color: var(--red); }
-  .alert-info { background: #00e5ff08; border-color: #00e5ff22; color: var(--cyan); }
+/* ─── API REF ────────────────────────────────────────────── */
+#apiref{padding:80px 0}
+.endpoint-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px;
+}
+@media(max-width:700px){.endpoint-grid{grid-template-columns:1fr}}
+.ep-card{
+  border:1px solid var(--border);border-radius:var(--r);overflow:hidden;
+}
+.ep-head{
+  padding:14px 18px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg1);
+}
+.method{
+  font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.5px;
+  padding:3px 8px;border-radius:3px;flex-shrink:0;
+}
+.method-get{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.method-post{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(0,212,255,.2)}
+.ep-path{font-family:var(--mono);font-size:12px;color:var(--text)}
+.ep-body{padding:14px 18px}
+.ep-desc{font-size:12px;color:var(--text2);margin-bottom:12px}
+.ep-params{display:flex;flex-direction:column;gap:6px}
+.ep-param{display:flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:11px}
+.param-name{color:var(--cyan);flex-shrink:0}
+.param-type{color:var(--text3);flex-shrink:0}
+.param-desc{color:var(--text2)}
 
-  /* ── Spinner ── */
-  .spinner {
-    width: 12px; height: 12px;
-    border: 2px solid transparent;
-    border-top-color: currentColor;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: none;
-  }
-  .loading .spinner { display: inline-block; }
-  .loading .btn-label { opacity: 0.7; }
+/* ─── FOOTER ─────────────────────────────────────────────── */
+footer{
+  border-top:1px solid var(--border);
+  padding:40px 32px;
+  max-width:1080px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+}
+.footer-left{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.footer-left span{color:var(--cyan)}
+.footer-links{display:flex;gap:16px}
+.footer-link{
+  color:var(--text2);text-decoration:none;
+  font-family:var(--mono);font-size:11px;
+  display:flex;align-items:center;gap:6px;
+  transition:.15s;
+}
+.footer-link:hover{color:var(--cyan)}
 
-  /* ── Results ── */
-  .results-area { margin-top: 0; }
+/* ─── ANIMATIONS ─────────────────────────────────────────── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+.reveal.in{opacity:1;transform:none}
 
-  .empty-state {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--text-dim);
-  }
-  .empty-state .empty-icon {
-    font-size: 32px;
-    margin-bottom: 12px;
-    opacity: 0.4;
-  }
-  .empty-state p { font-size: 11px; }
-
-  .result-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 10px;
-    transition: border-color 0.2s, transform 0.1s;
-    animation: fadeUp 0.3s ease both;
-  }
-  .result-card:hover { border-color: #2d333b; transform: translateX(2px); }
-
-  .result-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-
-  .result-meta {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .badge {
-    font-size: 9px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 3px;
-    border: 1px solid;
-    font-weight: 500;
-  }
-  .badge-page { background: #00e5ff08; border-color: var(--cyan-dim); color: var(--cyan); }
-  .badge-strategy { background: #ffb30008; border-color: #ffb30030; color: var(--amber); }
-  .badge-rank { background: #7d859008; border-color: #7d859030; color: var(--text-muted); }
-
-  .score-display {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 3px;
-    flex-shrink: 0;
-  }
-  .score-value {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-  }
-  .score-bar-wrap {
-    width: 80px;
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .score-bar {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.6s ease;
-  }
-  .score-high { background: var(--green); box-shadow: 0 0 4px var(--green); }
-  .score-mid { background: var(--amber); box-shadow: 0 0 4px var(--amber); }
-  .score-low { background: var(--red); box-shadow: 0 0 4px var(--red); }
-
-  .result-content {
-    font-size: 11px;
-    color: var(--text-muted);
-    line-height: 1.7;
-    border-left: 2px solid var(--border);
-    padding-left: 10px;
-    max-height: 120px;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-    transition: max-height 0.3s ease;
-  }
-  .result-content.expanded { max-height: 1000px; }
-  .result-content::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 30px;
-    background: linear-gradient(transparent, var(--bg));
-    pointer-events: none;
-    transition: opacity 0.3s;
-  }
-  .result-content.expanded::after { opacity: 0; }
-
-  .result-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 8px;
-  }
-  .source-name {
-    font-size: 10px;
-    color: var(--text-dim);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 200px;
-  }
-  .expand-hint { font-size: 10px; color: var(--text-dim); cursor: pointer; }
-  .expand-hint:hover { color: var(--cyan); }
-
-  .results-summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: 12px;
-    font-size: 11px;
-  }
-  .results-summary .mode-tag {
-    background: var(--cyan-dim);
-    color: var(--cyan);
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 10px;
-    letter-spacing: 0.5px;
-  }
-
-  /* ── Evaluate ── */
-  .metric-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .metric-row:last-child { border-bottom: none; }
-  .metric-name {
-    width: 160px;
-    font-size: 11px;
-    color: var(--text-muted);
-    flex-shrink: 0;
-  }
-  .metric-bar-wrap {
-    flex: 1;
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .metric-bar {
-    height: 100%;
-    background: var(--cyan);
-    border-radius: 2px;
-    box-shadow: 0 0 6px var(--cyan);
-    width: 0%;
-    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
-  }
-  .metric-val {
-    width: 44px;
-    text-align: right;
-    font-size: 12px;
-    color: var(--cyan);
-  }
-  .metric-null { color: var(--text-dim); font-size: 11px; }
-
-  .llm-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 6px 12px;
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-bottom: 14px;
-  }
-  .llm-badge .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); }
-
-  /* ── Two-column ── */
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
-
-  /* ── Animations ── */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-  .pulsing { animation: pulse 1.5s ease infinite; }
+/* ─── INGEST RESULT PREVIEW ─────────────────────────────── */
+.ingest-result{
+  border:1px solid rgba(16,185,129,.25);
+  background:rgba(16,185,129,.05);
+  border-radius:var(--r);padding:16px;margin-top:16px;display:none;
+}
+.ingest-result.show{display:block;animation:fadeUp .3s ease}
+.ingest-stat-row{display:flex;gap:24px;margin-top:12px;flex-wrap:wrap}
+.ingest-stat{display:flex;flex-direction:column;gap:2px}
+.ingest-stat-val{font-family:var(--display);font-size:22px;color:var(--green)}
+.ingest-stat-lbl{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px}
+.chunks-preview{margin-top:14px}
+.chunk-pill{
+  display:inline-block;margin:3px;padding:4px 10px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:3px;
+  font-family:var(--mono);font-size:10px;color:var(--text2);cursor:pointer;
+}
+.chunk-pill:hover{border-color:var(--cyan);color:var(--cyan)}
 </style>
 </head>
 <body>
-<div class="shell">
-
-  <!-- ── Header ── -->
-  <header>
-    <div class="header-left">
-      <h1>Production <span>RAG</span> System</h1>
-      <p class="tagline">Hybrid BM25 + Dense Vector Retrieval · pgvector · RAGAS Evaluation</p>
+<!-- ─── NAV ─────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">RAG//SYS</div>
+  <div class="nav-links">
+    <a class="nav-link active" href="#hero">Overview</a>
+    <a class="nav-link" href="#architecture">Architecture</a>
+    <a class="nav-link" href="#stack">Stack</a>
+    <a class="nav-link" href="#demo">Live Demo</a>
+    <a class="nav-link" href="#apiref">API Ref</a>
+  </div>
+  <div class="nav-right">
+    <div class="api-toggle">
+      <div class="pulse-dot" id="navDot"></div>
+      <span id="navStatus">—</span>
+      &nbsp;│&nbsp;
+      <select id="apiSelect" onchange="setAPI(this.value)">
+        <option value="https://rag-api-rp6ga3bkwa-uc.a.run.app">Cloud Run (prod)</option>
+        <option value="http://localhost:8000">Local (Docker)</option>
+      </select>
     </div>
-    <div class="header-right">
-      <div class="status-badge">
-        <div class="status-dot" id="statusDot"></div>
-        <span id="statusText">checking...</span>
-      </div>
-      <a class="gh-link" href="https://github.com/PKMadhavan/Production-RAG-System-with-Evaluation-Framework" target="_blank">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/>
-        </svg>
-        GitHub
+  </div>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────────────────── -->
+<div class="page">
+<section id="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <div class="dot"></div>
+      Final Submission · Production ML System
+    </div>
+    <h1 class="hero-title">
+      PRODUCTION<br><span class="hl">RAG</span> SYSTEM
+    </h1>
+    <p class="hero-desc">
+      A production-grade Retrieval-Augmented Generation pipeline with hybrid BM25 + pgvector retrieval, RAGAS evaluation, LangSmith observability, and full GCP deployment via Terraform + GitHub Actions.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-hero" href="#demo">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Launch Demo
+      </a>
+      <a class="btn-hero-ghost" href="https://github.com/PKMadhavan/Production-RAG-System-with-Evaluation-Framework" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+        View Source
+      </a>
+      <a class="btn-hero-ghost" href="https://rag-api-rp6ga3bkwa-uc.a.run.app/docs" target="_blank">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Swagger UI
       </a>
     </div>
-  </header>
+    <div class="hero-stats">
+      <div class="stat-cell">
+        <div class="stat-num">3<span>×</span></div>
+        <div class="stat-label">Retrieval Modes</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num"><span>4</span></div>
+        <div class="stat-label">RAGAS Metrics</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num">1024<span>d</span></div>
+        <div class="stat-label">Embedding Dims</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num"><span>∞</span></div>
+        <div class="stat-label">Doc Capacity</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  <!-- ── Upload ── -->
-  <div class="section">
-    <div class="section-label">01 · Ingest Document</div>
+<!-- ─── ARCHITECTURE ──────────────────────────────────────── -->
+<section id="architecture">
+<div class="container">
+  <div class="section-tag reveal">02 — System Design</div>
+  <h2 class="reveal">ARCHITECTURE</h2>
+  <p style="color:var(--text2);max-width:560px;margin-bottom:8px" class="reveal">
+    Ingestion, retrieval, and evaluation pipelines running on GCP Cloud Run backed by PostgreSQL + pgvector and Redis caching.
+  </p>
+
+  <!-- SVG Architecture Diagram -->
+  <div class="arch-diagram reveal">
+    <svg viewBox="0 0 960 420" xmlns="http://www.w3.org/2000/svg" style="font-family:'Space Mono',monospace">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#1e2a3a"/>
+        </marker>
+        <marker id="arr-c" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#00d4ff"/>
+        </marker>
+        <marker id="arr-g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#10b981"/>
+        </marker>
+        <marker id="arr-p" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#8b5cf6"/>
+        </marker>
+      </defs>
+
+      <!-- Background -->
+      <rect width="960" height="420" fill="#06090f"/>
+
+      <!-- Grid lines -->
+      <g opacity=".04" stroke="#00d4ff">
+        <line x1="0" y1="60" x2="960" y2="60"/>
+        <line x1="0" y1="120" x2="960" y2="120"/>
+        <line x1="0" y1="180" x2="960" y2="180"/>
+        <line x1="0" y1="240" x2="960" y2="240"/>
+        <line x1="0" y1="300" x2="960" y2="300"/>
+        <line x1="0" y1="360" x2="960" y2="360"/>
+        <line x1="160" y1="0" x2="160" y2="420"/>
+        <line x1="320" y1="0" x2="320" y2="420"/>
+        <line x1="480" y1="0" x2="480" y2="420"/>
+        <line x1="640" y1="0" x2="640" y2="420"/>
+        <line x1="800" y1="0" x2="800" y2="420"/>
+      </g>
+
+      <!-- INTERNET node -->
+      <rect x="20" y="168" width="110" height="48" rx="4" fill="#0b0f1a" stroke="#1e2a3a"/>
+      <text x="75" y="187" text-anchor="middle" fill="#475569" font-size="9" letter-spacing="2">CLIENT</text>
+      <text x="75" y="203" text-anchor="middle" fill="#94a3b8" font-size="12" font-weight="700">INTERNET</text>
+
+      <!-- Arrow: Internet → API -->
+      <line x1="131" y1="192" x2="195" y2="192" stroke="#1e2a3a" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="163" y="187" text-anchor="middle" fill="#475569" font-size="8">HTTP</text>
+
+      <!-- FASTAPI (center) -->
+      <rect x="196" y="80" width="200" height="224" rx="6" fill="#0b0f1a" stroke="#00d4ff" stroke-width="1.5" opacity=".9"/>
+      <text x="296" y="105" text-anchor="middle" fill="#00d4ff" font-size="9" letter-spacing="2">CORE ENGINE</text>
+      <text x="296" y="124" text-anchor="middle" fill="#e2e8f0" font-size="16" font-weight="700">FastAPI</text>
+
+      <!-- Sub-boxes inside FastAPI -->
+      <rect x="210" y="138" width="172" height="30" rx="3" fill="#111827" stroke="#1e2a3a"/>
+      <text x="296" y="149" text-anchor="middle" fill="#94a3b8" font-size="9">Document Loader</text>
+      <text x="296" y="161" text-anchor="middle" fill="#475569" font-size="8">PDF · TXT → Chunks</text>
+
+      <rect x="210" y="176" width="172" height="30" rx="3" fill="#111827" stroke="#1e2a3a"/>
+      <text x="296" y="187" text-anchor="middle" fill="#94a3b8" font-size="9">Embedder</text>
+      <text x="296" y="199" text-anchor="middle" fill="#475569" font-size="8">BAAI/bge-large (1024d)</text>
+
+      <rect x="210" y="214" width="172" height="30" rx="3" fill="#111827" stroke="#1e2a3a"/>
+      <text x="296" y="225" text-anchor="middle" fill="#94a3b8" font-size="9">RRF Fusion</text>
+      <text x="296" y="237" text-anchor="middle" fill="#475569" font-size="8">Reciprocal Rank Fusion</text>
+
+      <rect x="210" y="252" width="172" height="30" rx="3" fill="#111827" stroke="#1e2a3a"/>
+      <text x="296" y="263" text-anchor="middle" fill="#94a3b8" font-size="9">RAGAS Evaluator</text>
+      <text x="296" y="275" text-anchor="middle" fill="#475569" font-size="8">Faithfulness · Relevancy</text>
+
+      <!-- Arrow: API → pgvector -->
+      <line x1="397" y1="152" x2="467" y2="140" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arr-c)"/>
+      <text x="430" y="140" text-anchor="middle" fill="#00d4ff" font-size="8">dense</text>
+
+      <!-- Arrow: API → BM25 -->
+      <line x1="397" y1="230" x2="467" y2="230" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="430" y="222" text-anchor="middle" fill="#f59e0b" font-size="8">sparse</text>
+
+      <!-- Arrow: API → Redis -->
+      <line x1="296" y1="305" x2="296" y2="360" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr-p)"/>
+      <text x="310" y="340" fill="#8b5cf6" font-size="8">cache</text>
+
+      <!-- Arrow: API → LangSmith -->
+      <line x1="397" y1="330" x2="467" y2="350" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr-p)"/>
+
+      <!-- pgvector box -->
+      <rect x="468" y="60" width="160" height="80" rx="5" fill="#0b0f1a" stroke="#00d4ff" stroke-width="1"/>
+      <text x="548" y="83" text-anchor="middle" fill="#00d4ff" font-size="9" letter-spacing="2">POSTGRES 16</text>
+      <text x="548" y="103" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">pgvector</text>
+      <text x="548" y="120" text-anchor="middle" fill="#475569" font-size="9">cosine similarity</text>
+      <text x="548" y="133" text-anchor="middle" fill="#475569" font-size="9">Cloud SQL</text>
+
+      <!-- BM25 box -->
+      <rect x="468" y="165" width="160" height="70" rx="5" fill="#0b0f1a" stroke="#f59e0b" stroke-width="1"/>
+      <text x="548" y="186" text-anchor="middle" fill="#f59e0b" font-size="9" letter-spacing="2">IN-PROCESS</text>
+      <text x="548" y="207" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">BM25 Index</text>
+      <text x="548" y="224" text-anchor="middle" fill="#475569" font-size="9">rank-bm25 · TF-IDF</text>
+
+      <!-- Redis box -->
+      <rect x="210" y="360" width="172" height="48" rx="5" fill="#0b0f1a" stroke="#8b5cf6" stroke-width="1"/>
+      <text x="296" y="381" text-anchor="middle" fill="#8b5cf6" font-size="9" letter-spacing="2">CACHING</text>
+      <text x="296" y="399" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Redis 7</text>
+
+      <!-- LangSmith box -->
+      <rect x="468" y="330" width="160" height="70" rx="5" fill="#0b0f1a" stroke="#8b5cf6" stroke-width="1"/>
+      <text x="548" y="351" text-anchor="middle" fill="#8b5cf6" font-size="9" letter-spacing="2">OBSERVABILITY</text>
+      <text x="548" y="372" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">LangSmith</text>
+      <text x="548" y="389" text-anchor="middle" fill="#475569" font-size="9">trace · eval · monitor</text>
+
+      <!-- GitHub Actions box -->
+      <rect x="700" y="20" width="220" height="90" rx="5" fill="#0b0f1a" stroke="#10b981" stroke-width="1"/>
+      <text x="810" y="43" text-anchor="middle" fill="#10b981" font-size="9" letter-spacing="2">CI/CD</text>
+      <text x="810" y="65" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">GitHub Actions</text>
+      <text x="810" y="83" text-anchor="middle" fill="#475569" font-size="9">test → build → push → deploy</text>
+      <text x="810" y="98" text-anchor="middle" fill="#475569" font-size="9">Terraform · Cloud Run</text>
+
+      <!-- Cloud Run label -->
+      <rect x="700" y="140" width="220" height="80" rx="5" fill="#0b0f1a" stroke="#00d4ff" stroke-width="1" stroke-dasharray="4 3"/>
+      <text x="810" y="163" text-anchor="middle" fill="#00d4ff" font-size="9" letter-spacing="2">GCP</text>
+      <text x="810" y="185" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Cloud Run</text>
+      <text x="810" y="204" text-anchor="middle" fill="#475569" font-size="9">serverless · auto-scale</text>
+
+      <!-- Arrow: GH Actions → Cloud Run -->
+      <line x1="810" y1="110" x2="810" y2="138" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr-g)"/>
+      <text x="822" y="128" fill="#10b981" font-size="8">deploy</text>
+
+      <!-- Arrow: pgvector → RRF note -->
+      <line x1="468" y1="110" x2="420" y2="215" stroke="#00d4ff" stroke-width="1" stroke-dasharray="3 2" opacity=".5"/>
+      <line x1="468" y1="210" x2="420" y2="225" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 2" opacity=".5"/>
+    </svg>
+  </div>
+
+  <!-- Data Flow Cards -->
+  <div class="flow-cards" style="margin-top:32px">
+    <div class="flow-card reveal" style="--flow-color:#00d4ff;--flow-dim:var(--cyan-dim);--flow-border:rgba(0,212,255,.2)">
+      <div class="flow-icon">📥</div>
+      <div class="flow-title">Ingestion Pipeline</div>
+      <div class="flow-desc">Upload PDF/TXT → extract → chunk (fixed or semantic) → embed with BAAI/bge-large-en-v1.5 → store in pgvector + update BM25 index → invalidate Redis cache.</div>
+    </div>
+    <div class="flow-card reveal" style="--flow-color:#f59e0b;--flow-dim:rgba(245,158,11,.1);--flow-border:rgba(245,158,11,.2)">
+      <div class="flow-icon">🔍</div>
+      <div class="flow-title">Hybrid Retrieval</div>
+      <div class="flow-desc">Dense (pgvector cosine) + Sparse (BM25 TF-IDF) results fused via Reciprocal Rank Fusion. Redis caches query results with configurable TTL for sub-millisecond repeat queries.</div>
+    </div>
+    <div class="flow-card reveal" style="--flow-color:#8b5cf6;--flow-dim:rgba(139,92,246,.1);--flow-border:rgba(139,92,246,.2)">
+      <div class="flow-icon">📊</div>
+      <div class="flow-title">RAGAS Evaluation</div>
+      <div class="flow-desc">Faithfulness, Answer Relevancy, Context Recall, Context Precision — computed per sample with LLM-as-judge (OpenAI) or extractive fallback. All runs traced to LangSmith.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ─── TECH STACK ────────────────────────────────────────── -->
+<section id="stack">
+<div class="container">
+  <div class="section-tag reveal">03 — Technology</div>
+  <h2 class="reveal">TECH STACK</h2>
+  <div class="tech-grid">
+    <div class="tech-card reveal">
+      <div class="tech-icon">⚡</div>
+      <div class="tech-name">FastAPI</div>
+      <div class="tech-role">api/main.py</div>
+      <span class="tech-tag" style="background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid rgba(0,212,255,.2)">Backend</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🐘</div>
+      <div class="tech-name">PostgreSQL 16</div>
+      <div class="tech-role">+ pgvector ext</div>
+      <span class="tech-tag" style="background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)">Storage</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🤗</div>
+      <div class="tech-name">BAAI/bge-large</div>
+      <div class="tech-role">1024-dim embeddings</div>
+      <span class="tech-tag" style="background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)">ML Model</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">📈</div>
+      <div class="tech-name">BM25</div>
+      <div class="tech-role">rank-bm25 library</div>
+      <span class="tech-tag" style="background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)">Retrieval</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">⚗️</div>
+      <div class="tech-name">RAGAS</div>
+      <div class="tech-role">evaluation framework</div>
+      <span class="tech-tag" style="background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2)">Eval</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🔴</div>
+      <div class="tech-name">Redis 7</div>
+      <div class="tech-role">query + embedding cache</div>
+      <span class="tech-tag" style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)">Cache</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🔭</div>
+      <div class="tech-name">LangSmith</div>
+      <div class="tech-role">tracing + monitoring</div>
+      <span class="tech-tag" style="background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2)">Observability</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">☁️</div>
+      <div class="tech-name">GCP Cloud Run</div>
+      <div class="tech-role">serverless deployment</div>
+      <span class="tech-tag" style="background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)">Infra</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🏗️</div>
+      <div class="tech-name">Terraform</div>
+      <div class="tech-role">infrastructure as code</div>
+      <span class="tech-tag" style="background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)">IaC</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🔄</div>
+      <div class="tech-name">GitHub Actions</div>
+      <div class="tech-role">CI/CD pipeline</div>
+      <span class="tech-tag" style="background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)">DevOps</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🐳</div>
+      <div class="tech-name">Docker</div>
+      <div class="tech-role">containerization</div>
+      <span class="tech-tag" style="background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid rgba(0,212,255,.2)">Runtime</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🧪</div>
+      <div class="tech-name">pytest</div>
+      <div class="tech-role">async test suite</div>
+      <span class="tech-tag" style="background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)">Testing</span>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ─── DEMO ──────────────────────────────────────────────── -->
+<section id="demo">
+<div class="container">
+  <div class="section-tag reveal">04 — Interactive Demo</div>
+  <h2 class="reveal">LIVE DEMO</h2>
+  <p style="color:var(--text2);margin-bottom:32px" class="reveal">
+    Connected to the production API. Upload a document, query it with three retrieval strategies, and evaluate quality with RAGAS.
+  </p>
+
+  <div class="demo-tabs">
+    <button class="demo-tab active" onclick="switchTab('ingest')">
+      <span class="tab-num">1</span> Upload &amp; Ingest
+    </button>
+    <button class="demo-tab" onclick="switchTab('query')">
+      <span class="tab-num">2</span> Query &amp; Retrieve
+    </button>
+    <button class="demo-tab" onclick="switchTab('compare')">
+      <span class="tab-num">3</span> Mode Comparison
+    </button>
+    <button class="demo-tab" onclick="switchTab('eval')">
+      <span class="tab-num">4</span> RAGAS Evaluation
+    </button>
+  </div>
+
+  <!-- ── TAB 1: INGEST ── -->
+  <div class="demo-panel active" id="panel-ingest">
     <div class="card">
-      <div class="drop-zone" id="dropZone">
-        <input type="file" id="fileInput" accept=".pdf,.txt">
+      <div class="card-label">Document Ingestion</div>
+      <div class="drop" id="dropZone">
+        <input type="file" id="fileInput" accept=".pdf,.txt" onchange="onFileSelect(event)">
         <div class="drop-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
           </svg>
         </div>
         <p class="drop-text">Drop a file or <strong>browse</strong></p>
-        <p class="drop-hint">PDF or TXT · max 50 MB</p>
-        <p class="file-selected" id="fileSelected"></p>
+        <p class="drop-hint">PDF or TXT · up to 50 MB</p>
+        <p class="drop-selected" id="fileSelected"></p>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Chunking Strategy</label>
+      <div class="grid2" style="margin-top:16px">
+        <div class="field">
+          <label class="lbl">Chunking Strategy</label>
           <select id="chunkStrategy">
-            <option value="fixed">fixed</option>
-            <option value="semantic">semantic</option>
+            <option value="fixed">fixed — uniform character windows</option>
+            <option value="semantic">semantic — sentence-aware splits</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Chunk Size — <span id="chunkSizeVal">512</span> chars</label>
-          <div class="slider-row">
-            <input type="range" id="chunkSize" min="100" max="2000" value="512" step="50">
+        <div class="field">
+          <label class="lbl">Chunk Size — <span id="chunkSizeVal" style="color:var(--cyan)">512</span> chars</label>
+          <div class="range-row" style="margin-top:6px">
+            <input type="range" id="chunkSize" min="100" max="2000" value="512" step="50"
+              oninput="document.getElementById('chunkSizeVal').textContent=this.value">
+            <span class="range-val">512</span>
           </div>
         </div>
       </div>
 
-      <div class="progress-wrap" id="uploadProgress">
+      <div class="progress" id="uploadProgress">
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="progress-label"><span id="progressLabel">uploading...</span><span id="progressPct">0%</span></div>
+        <div class="progress-info">
+          <span id="progressLabel">uploading...</span>
+          <span id="progressPct">0%</span>
+        </div>
       </div>
 
       <button class="btn btn-primary btn-full" id="uploadBtn" onclick="handleUpload()">
         <span class="spinner"></span>
-        <span class="btn-label">Upload &amp; Ingest</span>
+        <span class="btn-txt">Upload &amp; Ingest</span>
       </button>
-
       <div class="alert" id="uploadAlert"></div>
+
+      <div class="ingest-result" id="ingestResult">
+        <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:4px" id="ingestFilename">—</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3)" id="ingestDocId">doc_id: —</div>
+        <div class="ingest-stat-row">
+          <div class="ingest-stat">
+            <div class="ingest-stat-val" id="ingestChunks">—</div>
+            <div class="ingest-stat-lbl">Chunks</div>
+          </div>
+          <div class="ingest-stat">
+            <div class="ingest-stat-val" id="ingestStrategy">—</div>
+            <div class="ingest-stat-lbl">Strategy</div>
+          </div>
+          <div class="ingest-stat">
+            <div class="ingest-stat-val" id="ingestTime">—</div>
+            <div class="ingest-stat-lbl">ms</div>
+          </div>
+        </div>
+        <div class="chunks-preview" id="chunksPreview"></div>
+      </div>
     </div>
   </div>
 
-  <!-- ── Query ── -->
-  <div class="section">
-    <div class="section-label">02 · Query</div>
+  <!-- ── TAB 2: QUERY ── -->
+  <div class="demo-panel" id="panel-query">
+    <!-- History -->
+    <div class="history-wrap" id="historyWrap">
+      <div class="history-head">
+        Recent Queries
+        <button class="btn btn-sm btn-ghost" onclick="clearHistory()" style="padding:3px 10px;font-size:10px">Clear</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">No queries yet — run one below</div>
+      </div>
+    </div>
+
     <div class="card">
-      <div class="form-group">
-        <label>Question</label>
-        <input type="text" id="queryInput" placeholder="What does the document say about..." onkeydown="if(event.key==='Enter')handleQuery()">
+      <div class="card-label">Query Configuration</div>
+      <div class="field">
+        <label class="lbl">Question</label>
+        <input type="text" id="queryInput" placeholder="What does the document say about..."
+          onkeydown="if(event.key==='Enter')handleQuery()">
       </div>
 
-      <div class="form-row" style="margin-top:14px;">
-        <div class="form-group">
-          <label>Retrieval Mode</label>
-          <div class="mode-toggle">
-            <button class="mode-btn" onclick="setMode('dense')">Dense</button>
-            <button class="mode-btn" onclick="setMode('sparse')">Sparse</button>
-            <button class="mode-btn active" onclick="setMode('hybrid')">Hybrid</button>
+      <div class="grid2" style="margin-top:16px">
+        <div class="field">
+          <label class="lbl">Retrieval Mode</label>
+          <div class="mode-pills">
+            <button class="mode-pill" onclick="setMode('dense',this)">
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              Dense
+            </button>
+            <button class="mode-pill" onclick="setMode('sparse',this)">
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Sparse
+            </button>
+            <button class="mode-pill active" onclick="setMode('hybrid',this)">
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Hybrid
+            </button>
           </div>
+          <div class="mode-desc" id="modeDesc">pgvector cosine + BM25 → RRF fusion</div>
         </div>
-        <div class="form-group">
-          <label>Top K — <span id="topKVal">5</span> results</label>
-          <div class="slider-row">
-            <input type="range" id="topK" min="1" max="20" value="5">
-            <span class="slider-val" id="topKDisplay">5</span>
+        <div class="field">
+          <label class="lbl">Top K — <span id="topKVal" style="color:var(--cyan)">5</span> results</label>
+          <div class="range-row" style="margin-top:6px">
+            <input type="range" id="topK" min="1" max="20" value="5"
+              oninput="document.getElementById('topKVal').textContent=this.value">
+            <span class="range-val" id="topKDisp">5</span>
           </div>
         </div>
       </div>
 
       <button class="btn btn-primary btn-full" id="queryBtn" onclick="handleQuery()">
         <span class="spinner"></span>
-        <span class="btn-label">Search</span>
+        <span class="btn-txt">Search Documents</span>
       </button>
-
       <div class="alert" id="queryAlert"></div>
     </div>
-  </div>
 
-  <!-- ── Results ── -->
-  <div class="section">
-    <div class="section-label">03 · Results</div>
-    <div class="results-area" id="resultsArea">
+    <div class="results-wrap" id="resultsWrap">
       <div class="empty-state">
         <div class="empty-icon">⌕</div>
-        <p>Run a query to see retrieved chunks here</p>
+        <p>Results appear here after a query</p>
       </div>
     </div>
   </div>
 
-  <!-- ── Evaluate ── -->
-  <div class="section">
-    <div class="section-label">04 · RAGAS Evaluation</div>
+  <!-- ── TAB 3: COMPARE ── -->
+  <div class="demo-panel" id="panel-compare">
     <div class="card">
-      <div class="two-col">
-        <div class="form-group">
-          <label>Question</label>
-          <input type="text" id="evalQuestion" placeholder="Enter evaluation question...">
+      <div class="card-label">Side-by-Side Mode Comparison</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:16px">
+        Run the same query across all three retrieval strategies simultaneously and compare ranking differences.
+      </p>
+      <div class="field">
+        <label class="lbl">Query</label>
+        <input type="text" id="compareInput" placeholder="Enter a question to compare all three modes..."
+          onkeydown="if(event.key==='Enter')handleCompare()">
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div class="field">
+          <label class="lbl">Top K per mode</label>
+          <input type="number" id="compareK" value="3" min="1" max="10" style="width:80px">
         </div>
-        <div class="form-group">
-          <label>Ground Truth <span style="color:var(--text-dim)">(optional)</span></label>
-          <input type="text" id="evalGround" placeholder="Expected answer...">
+      </div>
+      <button class="btn btn-primary btn-full" id="compareBtn" onclick="handleCompare()">
+        <span class="spinner"></span>
+        <span class="btn-txt">Compare All Modes</span>
+      </button>
+      <div class="alert" id="compareAlert"></div>
+    </div>
+
+    <div class="compare-grid" id="compareGrid">
+      <div class="compare-col">
+        <div class="compare-col-head">
+          <span style="color:var(--cyan)">Dense</span>
+          <span style="font-size:10px;color:var(--text3)" id="denseTime">—</span>
+        </div>
+        <div class="compare-col-body" id="denseResults">
+          <div style="color:var(--text3);text-align:center;padding:24px 0">Run comparison to see results</div>
+        </div>
+      </div>
+      <div class="compare-col">
+        <div class="compare-col-head">
+          <span style="color:var(--amber)">Sparse</span>
+          <span style="font-size:10px;color:var(--text3)" id="sparseTime">—</span>
+        </div>
+        <div class="compare-col-body" id="sparseResults">
+          <div style="color:var(--text3);text-align:center;padding:24px 0">Run comparison to see results</div>
+        </div>
+      </div>
+      <div class="compare-col">
+        <div class="compare-col-head">
+          <span style="color:var(--green)">Hybrid (RRF)</span>
+          <span style="font-size:10px;color:var(--text3)" id="hybridTime">—</span>
+        </div>
+        <div class="compare-col-body" id="hybridResults">
+          <div style="color:var(--text3);text-align:center;padding:24px 0">Run comparison to see results</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 4: EVAL ── -->
+  <div class="demo-panel" id="panel-eval">
+    <div class="card">
+      <div class="card-label">RAGAS Evaluation</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:16px">
+        Evaluate retrieval quality with four RAGAS metrics. Add multiple samples for aggregate scoring.
+      </p>
+
+      <div id="evalSamples">
+        <div class="eval-sample-row" id="sample-0">
+          <div class="grid2" style="margin-bottom:10px">
+            <div class="field">
+              <label class="lbl">Question #1</label>
+              <input type="text" class="eval-q" placeholder="Evaluation question...">
+            </div>
+            <div class="field">
+              <label class="lbl">Ground Truth <span style="color:var(--text3)">(optional)</span></label>
+              <input type="text" class="eval-gt" placeholder="Expected answer...">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-ghost btn-sm" onclick="addSample()" style="margin-top:4px">
+        + Add Sample
+      </button>
+
+      <div class="grid2" style="margin-top:16px">
+        <div class="field">
+          <label class="lbl">Retrieval Mode</label>
+          <div class="mode-pills">
+            <button class="mode-pill" onclick="setEvalMode('dense',this)">Dense</button>
+            <button class="mode-pill" onclick="setEvalMode('sparse',this)">Sparse</button>
+            <button class="mode-pill active" onclick="setEvalMode('hybrid',this)">Hybrid</button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="lbl">Top K</label>
+          <input type="number" id="evalTopK" value="5" min="1" max="20">
         </div>
       </div>
 
       <button class="btn btn-primary btn-full" id="evalBtn" onclick="handleEval()">
         <span class="spinner"></span>
-        <span class="btn-label">Run RAGAS Evaluation</span>
+        <span class="btn-txt">Run RAGAS Evaluation</span>
       </button>
-
       <div class="alert" id="evalAlert"></div>
+    </div>
 
-      <div id="evalResults" style="margin-top:16px; display:none;">
-        <div class="llm-badge" id="llmBadge">
-          <div class="dot"></div>
-          <span id="llmLabel">evaluating...</span>
+    <div id="evalOutput" style="display:none">
+      <div class="card" style="margin-top:16px">
+        <div class="card-label">Aggregate Scores</div>
+        <div class="eval-meta">
+          <div class="eval-llm">
+            <div class="eval-llm-dot"></div>
+            <span id="evalLLM">llm: extractive</span>
+          </div>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3)" id="evalMetaTime">—</span>
         </div>
-        <div id="metricsContainer"></div>
-        <div style="margin-top:10px; font-size:10px; color:var(--text-dim); text-align:right;" id="evalTime"></div>
+        <div class="eval-metrics" id="evalMetrics"></div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:10px">PER-SAMPLE RESULTS</div>
+        <div id="sampleResultsList"></div>
       </div>
     </div>
   </div>
 
+</div><!-- /container -->
+</section>
+
+<!-- ─── API REF ────────────────────────────────────────────── -->
+<section id="apiref">
+<div class="container">
+  <div class="section-tag reveal">05 — Reference</div>
+  <h2 class="reveal">API ENDPOINTS</h2>
+  <p style="color:var(--text2);margin-bottom:8px" class="reveal">
+    Full OpenAPI docs available at <a href="https://rag-api-rp6ga3bkwa-uc.a.run.app/docs" target="_blank" style="color:var(--cyan)">the live Swagger UI</a>.
+  </p>
+  <div class="endpoint-grid">
+    <div class="ep-card reveal">
+      <div class="ep-head">
+        <span class="method method-get">GET</span>
+        <span class="ep-path">/health</span>
+      </div>
+      <div class="ep-body">
+        <div class="ep-desc">Health check with dependency status for Postgres, Redis, and LangSmith.</div>
+        <div class="ep-params">
+          <div class="ep-param"><span class="param-name">status</span><span class="param-type">string</span><span class="param-desc">"ok" when all services up</span></div>
+          <div class="ep-param"><span class="param-name">postgres_connected</span><span class="param-type">bool</span></div>
+          <div class="ep-param"><span class="param-name">redis_connected</span><span class="param-type">bool</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ep-card reveal">
+      <div class="ep-head">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/ingest/</span>
+      </div>
+      <div class="ep-body">
+        <div class="ep-desc">Upload a PDF or TXT file. Returns document ID and chunk info.</div>
+        <div class="ep-params">
+          <div class="ep-param"><span class="param-name">file</span><span class="param-type">File</span><span class="param-desc">PDF or plain text</span></div>
+          <div class="ep-param"><span class="param-name">chunking_strategy</span><span class="param-type">str</span><span class="param-desc">fixed | semantic</span></div>
+          <div class="ep-param"><span class="param-name">chunk_size</span><span class="param-type">int</span><span class="param-desc">characters per chunk</span></div>
+          <div class="ep-param"><span class="param-name">chunk_overlap</span><span class="param-type">int</span><span class="param-desc">overlap in characters</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ep-card reveal">
+      <div class="ep-head">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/query/</span>
+      </div>
+      <div class="ep-body">
+        <div class="ep-desc">Retrieve relevant chunks using dense, sparse, or hybrid retrieval.</div>
+        <div class="ep-params">
+          <div class="ep-param"><span class="param-name">query</span><span class="param-type">str</span><span class="param-desc">1–1000 characters</span></div>
+          <div class="ep-param"><span class="param-name">retrieval_mode</span><span class="param-type">str</span><span class="param-desc">dense | sparse | hybrid</span></div>
+          <div class="ep-param"><span class="param-name">top_k</span><span class="param-type">int</span><span class="param-desc">1–50, default 5</span></div>
+          <div class="ep-param"><span class="param-name">score_threshold</span><span class="param-type">float</span><span class="param-desc">0.0–1.0</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ep-card reveal">
+      <div class="ep-head">
+        <span class="method method-post">POST</span>
+        <span class="ep-path">/evaluate/</span>
+      </div>
+      <div class="ep-body">
+        <div class="ep-desc">Run RAGAS evaluation over live retrieval. Supports batch samples.</div>
+        <div class="ep-params">
+          <div class="ep-param"><span class="param-name">samples</span><span class="param-type">list</span><span class="param-desc">question + optional ground_truth</span></div>
+          <div class="ep-param"><span class="param-name">retrieval_mode</span><span class="param-type">str</span><span class="param-desc">dense | sparse | hybrid</span></div>
+          <div class="ep-param"><span class="param-name">top_k</span><span class="param-type">int</span><span class="param-desc">chunks per sample</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────────────────── -->
+<footer class="reveal">
+  <div class="footer-left">
+    Production RAG System · <span>Madhavan Panneerselvam Kumar</span><br>
+    FastAPI · pgvector · BM25 · RAGAS · GCP Cloud Run · Terraform
+  </div>
+  <div class="footer-links">
+    <a class="footer-link" href="https://github.com/PKMadhavan/Production-RAG-System-with-Evaluation-Framework" target="_blank">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+      GitHub
+    </a>
+    <a class="footer-link" href="https://rag-api-rp6ga3bkwa-uc.a.run.app/docs" target="_blank">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      API Docs
+    </a>
+  </div>
+</footer>
+</div><!-- /page -->
 
 <script>
-const API = 'https://rag-api-rp6ga3bkwa-uc.a.run.app';
+/* ─── STATE ──────────────────────────────────────────── */
+let API = 'https://rag-api-rp6ga3bkwa-uc.a.run.app';
 let selectedMode = 'hybrid';
+let evalMode = 'hybrid';
 let selectedFile = null;
+let queryHistory = [];
+let sampleCount = 1;
 
-// ── Status Check ──
+const MODES = {
+  dense:  'pgvector cosine similarity',
+  sparse: 'BM25 term-frequency ranking',
+  hybrid: 'pgvector cosine + BM25 → RRF fusion'
+};
+
+/* ─── API TOGGLE ─────────────────────────────────────── */
+function setAPI(url) { API = url; checkStatus(); }
+
+/* ─── STATUS ─────────────────────────────────────────── */
 async function checkStatus() {
-  const dot = document.getElementById('statusDot');
-  const txt = document.getElementById('statusText');
+  const dot = document.getElementById('navDot');
+  const txt = document.getElementById('navStatus');
+  dot.className = 'pulse-dot'; txt.textContent = 'checking';
   try {
     const r = await fetch(`${API}/health`, { signal: AbortSignal.timeout(8000) });
     const d = await r.json();
     if (d.status === 'ok') {
-      dot.className = 'status-dot online';
+      dot.className = 'pulse-dot on';
       txt.textContent = 'live';
     } else throw new Error();
   } catch {
-    dot.className = 'status-dot offline';
+    dot.className = 'pulse-dot off';
     txt.textContent = 'offline';
   }
 }
 checkStatus();
 setInterval(checkStatus, 30000);
 
-// ── Sliders ──
-document.getElementById('chunkSize').addEventListener('input', e => {
-  document.getElementById('chunkSizeVal').textContent = e.target.value;
-});
-document.getElementById('topK').addEventListener('input', e => {
-  document.getElementById('topKVal').textContent = e.target.value;
-  document.getElementById('topKDisplay').textContent = e.target.value;
-});
+/* ─── NAV ACTIVE LINK ────────────────────────────────── */
+const navLinks = document.querySelectorAll('.nav-link');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const id = e.target.id;
+      const link = document.querySelector(`.nav-link[href="#${id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { threshold: 0.4 });
+document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
 
-// ── File Drop ──
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
+/* ─── SCROLL REVEAL ──────────────────────────────────── */
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
 
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  const f = e.dataTransfer.files[0];
-  if (f) setFile(f);
-});
-fileInput.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]); });
-
-function setFile(f) {
-  selectedFile = f;
-  const sel = document.getElementById('fileSelected');
-  sel.textContent = `✓ ${f.name} (${(f.size/1024).toFixed(1)} KB)`;
-  hideAlert('uploadAlert');
-}
-
-// ── Mode Toggle ──
-function setMode(m) {
-  selectedMode = m;
-  document.querySelectorAll('.mode-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.toLowerCase() === m);
+/* ─── TABS ───────────────────────────────────────────── */
+function switchTab(id) {
+  document.querySelectorAll('.demo-tab').forEach((t,i) => {
+    const ids = ['ingest','query','compare','eval'];
+    t.classList.toggle('active', ids[i] === id);
+  });
+  document.querySelectorAll('.demo-panel').forEach(p => {
+    p.classList.toggle('active', p.id === 'panel-' + id);
   });
 }
 
-// ── Upload ──
-async function handleUpload() {
-  if (!selectedFile) { showAlert('uploadAlert', 'error', 'Please select a file first.'); return; }
+/* ─── FILE DROP ──────────────────────────────────────── */
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f) pickFile(f);
+});
+function onFileSelect(e) { if (e.target.files[0]) pickFile(e.target.files[0]); }
+function pickFile(f) {
+  selectedFile = f;
+  const el = document.getElementById('fileSelected');
+  el.textContent = `✓ ${f.name} (${(f.size/1024).toFixed(1)} KB)`;
+  el.classList.add('show');
+  hideAlert('uploadAlert');
+  document.getElementById('ingestResult').classList.remove('show');
+}
 
+/* ─── CHUNK SIZE SLIDER ──────────────────────────────── */
+document.getElementById('chunkSize').addEventListener('input', function() {
+  document.querySelector('#panel-ingest .range-val').textContent = this.value;
+});
+document.getElementById('topK').addEventListener('input', function() {
+  document.getElementById('topKDisp').textContent = this.value;
+});
+
+/* ─── MODE ───────────────────────────────────────────── */
+function setMode(m, btn) {
+  selectedMode = m;
+  document.querySelectorAll('#panel-query .mode-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('modeDesc').textContent = MODES[m];
+}
+function setEvalMode(m, btn) {
+  evalMode = m;
+  document.querySelectorAll('#panel-eval .mode-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ─── UPLOAD ─────────────────────────────────────────── */
+async function handleUpload() {
+  if (!selectedFile) { showAlert('uploadAlert','err','Please select a file first.'); return; }
   const btn = document.getElementById('uploadBtn');
   const prog = document.getElementById('uploadProgress');
   const fill = document.getElementById('progressFill');
   const pct = document.getElementById('progressPct');
-  const label = document.getElementById('progressLabel');
-
+  const lbl = document.getElementById('progressLabel');
   setLoading(btn, true);
-  prog.classList.add('visible');
+  prog.classList.add('show');
   hideAlert('uploadAlert');
-
-  // Animate progress bar
   let p = 0;
-  const interval = setInterval(() => {
-    p = Math.min(p + Math.random() * 12, 88);
+  const iv = setInterval(() => {
+    p = Math.min(p + Math.random() * 10, 88);
     fill.style.width = p + '%';
     pct.textContent = Math.floor(p) + '%';
-  }, 200);
-
+  }, 180);
   try {
     const form = new FormData();
     form.append('file', selectedFile);
     form.append('chunking_strategy', document.getElementById('chunkStrategy').value);
     form.append('chunk_size', document.getElementById('chunkSize').value);
     form.append('chunk_overlap', '50');
-
-    const r = await fetch(`${API}/ingest/`, { method: 'POST', body: form });
-    clearInterval(interval);
-    fill.style.width = '100%'; pct.textContent = '100%';
-
-    if (!r.ok) {
-      const e = await r.json().catch(() => ({}));
-      throw new Error(e.detail || `HTTP ${r.status}`);
-    }
+    const r = await fetch(`${API}/ingest/`, { method:'POST', body:form });
+    clearInterval(iv);
+    fill.style.width = '100%'; pct.textContent = '100%'; lbl.textContent = 'complete';
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail || `HTTP ${r.status}`); }
     const d = await r.json();
-    label.textContent = 'complete';
-    showAlert('uploadAlert', 'success',
-      `✓ Ingested "${selectedFile.name}" — ${d.chunks_created} chunks created · doc_id: ${d.document_id?.slice(0,8)}...`);
-  } catch (err) {
-    clearInterval(interval);
+    showIngestResult(d);
+  } catch(err) {
+    clearInterval(iv);
     fill.style.width = '0%'; pct.textContent = '';
-    prog.classList.remove('visible');
-    showAlert('uploadAlert', 'error', `Upload failed: ${err.message}`);
-  } finally {
-    setLoading(btn, false);
-  }
+    prog.classList.remove('show');
+    showAlert('uploadAlert','err', `Upload failed: ${err.message}`);
+  } finally { setLoading(btn, false); }
 }
 
-// ── Query ──
+function showIngestResult(d) {
+  const el = document.getElementById('ingestResult');
+  document.getElementById('ingestFilename').textContent = '✓ ' + (d.filename || 'Document ingested');
+  document.getElementById('ingestDocId').textContent = 'doc_id: ' + (d.document_id || '—');
+  document.getElementById('ingestChunks').textContent = d.num_chunks ?? d.chunks_created ?? '—';
+  document.getElementById('ingestStrategy').textContent = d.chunking_strategy || '—';
+  document.getElementById('ingestTime').textContent = (d.processing_time_ms || 0).toFixed(0);
+  // chunk preview pills
+  const prev = document.getElementById('chunksPreview');
+  if (d.chunks && d.chunks.length) {
+    prev.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:1px">CHUNK PREVIEW</div>' +
+      d.chunks.slice(0,8).map((c,i) =>
+        `<span class="chunk-pill" title="${esc(c.content_preview||'')}">chunk_${i} · ${c.content_preview ? c.content_preview.slice(0,30)+'…' : '—'}</span>`
+      ).join('');
+  } else prev.innerHTML = '';
+  el.classList.add('show');
+  showAlert('uploadAlert','ok',
+    `Ingested "${d.filename}" — ${d.num_chunks ?? d.chunks_created} chunks created`);
+}
+
+/* ─── QUERY ──────────────────────────────────────────── */
 async function handleQuery() {
   const q = document.getElementById('queryInput').value.trim();
-  if (!q) { showAlert('queryAlert', 'error', 'Enter a question first.'); return; }
-
+  if (!q) { showAlert('queryAlert','err','Enter a question first.'); return; }
   const btn = document.getElementById('queryBtn');
-  setLoading(btn, true);
-  hideAlert('queryAlert');
-
+  setLoading(btn, true); hideAlert('queryAlert');
   try {
     const r = await fetch(`${API}/query/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: q,
-        retrieval_mode: selectedMode,
-        top_k: parseInt(document.getElementById('topK').value),
-        score_threshold: 0,
-      })
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ query:q, retrieval_mode:selectedMode, top_k:parseInt(document.getElementById('topK').value), score_threshold:0 })
     });
-
-    if (!r.ok) {
-      const e = await r.json().catch(() => ({}));
-      throw new Error(e.detail || `HTTP ${r.status}`);
-    }
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail || `HTTP ${r.status}`); }
     const d = await r.json();
-    renderResults(d, q);
-  } catch (err) {
-    showAlert('queryAlert', 'error', `Query failed: ${err.message}`);
-    document.getElementById('resultsArea').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><p>${err.message}</p></div>`;
-  } finally {
-    setLoading(btn, false);
-  }
+    addHistory(q, d);
+    renderResults(d);
+  } catch(err) {
+    showAlert('queryAlert','err', `Query failed: ${err.message}`);
+    document.getElementById('resultsWrap').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><p>${esc(err.message)}</p></div>`;
+  } finally { setLoading(btn, false); }
 }
 
-// ── Render Results ──
-function renderResults(data, query) {
-  const area = document.getElementById('resultsArea');
-
-  if (!data.results || data.results.length === 0) {
-    area.innerHTML = `<div class="empty-state"><div class="empty-icon">∅</div><p>No results found. Try ingesting a document first.</p></div>`;
+function renderResults(data) {
+  const wrap = document.getElementById('resultsWrap');
+  if (!data.results || !data.results.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">∅</div><p>No results found. Try ingesting a document first.</p></div>`;
     return;
   }
-
   const maxScore = Math.max(...data.results.map(r => r.score), 0.0001);
-
-  let html = `<div class="results-summary">
-    <span style="color:var(--text-muted)">${data.num_results} chunks · <span style="color:var(--text)">${(data.processing_time_ms||0).toFixed(0)}ms</span></span>
+  let html = `<div class="results-header">
+    <span style="color:var(--text2)"><span style="color:var(--text)">${data.num_results}</span> chunks · <span style="color:var(--text)">${(data.processing_time_ms||0).toFixed(0)}ms</span></span>
     <div style="display:flex;gap:8px;align-items:center">
-      ${data.cached ? '<span style="font-size:10px;color:var(--amber)">⚡ cached</span>' : ''}
-      <span class="mode-tag">${selectedMode}</span>
+      <span class="cached-badge ${data.cached?'show':''}">⚡ cached</span>
+      <span class="mode-badge">${selectedMode}</span>
     </div>
   </div>`;
-
   data.results.forEach((chunk, i) => {
     const score = chunk.score || 0;
     const pct = Math.min((score / maxScore) * 100, 100);
-    const scoreClass = pct > 65 ? 'score-high' : pct > 30 ? 'score-mid' : 'score-low';
-    const src = chunk.metadata?.source || 'unknown';
+    const cls = pct > 65 ? 's-hi' : pct > 30 ? 's-md' : 's-lo';
     const page = chunk.metadata?.page_number;
     const strategy = chunk.metadata?.chunking_strategy || '';
-    const content = escapeHtml(chunk.content || '');
-
-    html += `<div class="result-card" style="animation-delay:${i*0.05}s">
-      <div class="result-header">
-        <div class="result-meta">
-          <span class="badge badge-rank">#${i+1}</span>
-          ${page != null ? `<span class="badge badge-page">p.${page}</span>` : ''}
-          ${strategy ? `<span class="badge badge-strategy">${strategy}</span>` : ''}
+    const src = chunk.metadata?.source || 'unknown';
+    html += `<div class="result-card" style="animation-delay:${i*.05}s">
+      <div class="result-top">
+        <div class="result-badges">
+          <span class="rbadge rb-rank">#${i+1}</span>
+          ${page!=null?`<span class="rbadge rb-page">p.${page}</span>`:''}
+          ${strategy?`<span class="rbadge rb-strat">${strategy}</span>`:''}
         </div>
-        <div class="score-display">
-          <span class="score-value">${score.toFixed(4)}</span>
-          <div class="score-bar-wrap">
-            <div class="score-bar ${scoreClass}" style="width:${pct}%"></div>
-          </div>
+        <div class="score-col">
+          <span class="score-num">${score.toFixed(4)}</span>
+          <div class="score-bar-track"><div class="score-bar-fill ${cls}" style="width:0" data-w="${pct}%"></div></div>
         </div>
       </div>
-      <div class="result-content" id="content-${i}" onclick="toggleExpand(${i})">${content}</div>
-      <div class="result-footer">
-        <span class="source-name" title="${src}">${src}</span>
-        <span class="expand-hint" onclick="toggleExpand(${i})">click to expand</span>
+      <div class="result-body" id="rb-${i}" onclick="toggleBody(${i})">${esc(chunk.content||'')}</div>
+      <div class="result-foot">
+        <span class="src-name" title="${esc(src)}">${esc(src)}</span>
+        <button class="expand-btn" onclick="toggleBody(${i})">expand ↕</button>
       </div>
     </div>`;
   });
-
-  area.innerHTML = html;
-
-  // Animate score bars
+  wrap.innerHTML = html;
   requestAnimationFrame(() => {
-    document.querySelectorAll('.score-bar').forEach(b => {
-      const w = b.style.width; b.style.width = '0%';
-      setTimeout(() => b.style.width = w, 50);
+    document.querySelectorAll('.score-bar-fill').forEach(b => {
+      const w = b.dataset.w; b.style.width = '0';
+      setTimeout(() => b.style.width = w, 60);
     });
   });
 }
 
-function toggleExpand(i) {
-  document.getElementById(`content-${i}`)?.classList.toggle('expanded');
+function toggleBody(i) {
+  document.getElementById(`rb-${i}`)?.classList.toggle('expanded');
 }
 
-// ── Evaluate ──
+/* ─── HISTORY ────────────────────────────────────────── */
+function addHistory(q, data) {
+  queryHistory.unshift({ q, mode: selectedMode, n: data.num_results, ms: (data.processing_time_ms||0).toFixed(0), ts: Date.now() });
+  if (queryHistory.length > 12) queryHistory.pop();
+  renderHistory();
+}
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!queryHistory.length) {
+    list.innerHTML = '<div class="history-empty">No queries yet — run one below</div>'; return;
+  }
+  list.innerHTML = queryHistory.map(h =>
+    `<div class="history-item" onclick="replayQuery('${esc(h.q)}')">
+      <span class="history-q">${esc(h.q)}</span>
+      <span class="history-meta">${h.mode} · ${h.n} hits · ${h.ms}ms</span>
+    </div>`
+  ).join('');
+}
+function replayQuery(q) {
+  document.getElementById('queryInput').value = q;
+  handleQuery();
+}
+function clearHistory() {
+  queryHistory = [];
+  renderHistory();
+}
+
+/* ─── COMPARE ────────────────────────────────────────── */
+async function handleCompare() {
+  const q = document.getElementById('compareInput').value.trim();
+  if (!q) { showAlert('compareAlert','err','Enter a query to compare.'); return; }
+  const k = parseInt(document.getElementById('compareK').value) || 3;
+  const btn = document.getElementById('compareBtn');
+  setLoading(btn, true); hideAlert('compareAlert');
+  document.getElementById('denseResults').innerHTML = '<div style="color:var(--text3);padding:12px;font-size:11px">loading...</div>';
+  document.getElementById('sparseResults').innerHTML = '<div style="color:var(--text3);padding:12px;font-size:11px">loading...</div>';
+  document.getElementById('hybridResults').innerHTML = '<div style="color:var(--text3);padding:12px;font-size:11px">loading...</div>';
+  try {
+    const [dense, sparse, hybrid] = await Promise.all(
+      ['dense','sparse','hybrid'].map(m =>
+        fetch(`${API}/query/`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ query:q, retrieval_mode:m, top_k:k, score_threshold:0 })
+        }).then(r => r.json())
+      )
+    );
+    renderCompare('denseResults','denseTime', dense,'#00d4ff');
+    renderCompare('sparseResults','sparseTime', sparse,'#f59e0b');
+    renderCompare('hybridResults','hybridTime', hybrid,'#10b981');
+  } catch(err) {
+    showAlert('compareAlert','err', `Comparison failed: ${err.message}`);
+  } finally { setLoading(btn, false); }
+}
+function renderCompare(id, timeId, data, color) {
+  document.getElementById(timeId).textContent = (data.processing_time_ms||0).toFixed(0)+'ms';
+  const el = document.getElementById(id);
+  if (!data.results || !data.results.length) {
+    el.innerHTML = '<div style="color:var(--text3);text-align:center;padding:24px 0;font-size:11px">No results</div>';
+    return;
+  }
+  el.innerHTML = data.results.map((r,i) =>
+    `<div class="compare-result">
+      <span style="font-family:var(--mono);font-size:10px;color:${color}">#${i+1}</span>
+      <span class="compare-score">${(r.score||0).toFixed(4)}</span>
+      <div class="compare-txt">${esc(r.content||'')}</div>
+    </div>`
+  ).join('');
+}
+
+/* ─── EVAL SAMPLES ───────────────────────────────────── */
+function addSample() {
+  sampleCount++;
+  const div = document.createElement('div');
+  div.className = 'eval-sample-row';
+  div.id = `sample-${sampleCount-1}`;
+  div.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">SAMPLE #${sampleCount}</span>
+      <button class="btn btn-ghost btn-sm" onclick="this.closest('.eval-sample-row').remove()" style="padding:3px 8px;font-size:10px">✕</button>
+    </div>
+    <div class="grid2" style="margin-bottom:10px">
+      <div class="field"><label class="lbl">Question #${sampleCount}</label><input type="text" class="eval-q" placeholder="Evaluation question..."></div>
+      <div class="field"><label class="lbl">Ground Truth</label><input type="text" class="eval-gt" placeholder="Expected answer..."></div>
+    </div>`;
+  document.getElementById('evalSamples').appendChild(div);
+}
+
+/* ─── EVALUATION ─────────────────────────────────────── */
 async function handleEval() {
-  const q = document.getElementById('evalQuestion').value.trim();
-  if (!q) { showAlert('evalAlert', 'error', 'Enter a question for evaluation.'); return; }
-
+  const rows = document.querySelectorAll('.eval-sample-row');
+  const samples = [];
+  rows.forEach(row => {
+    const q = row.querySelector('.eval-q')?.value?.trim();
+    const gt = row.querySelector('.eval-gt')?.value?.trim();
+    if (q) { const s = {question:q}; if (gt) s.ground_truth = gt; samples.push(s); }
+  });
+  if (!samples.length) { showAlert('evalAlert','err','Enter at least one question.'); return; }
   const btn = document.getElementById('evalBtn');
-  setLoading(btn, true);
-  hideAlert('evalAlert');
-  document.getElementById('evalResults').style.display = 'none';
-
-  const ground = document.getElementById('evalGround').value.trim();
-  const sample = { question: q };
-  if (ground) sample.ground_truth = ground;
-
+  setLoading(btn, true); hideAlert('evalAlert');
+  document.getElementById('evalOutput').style.display = 'none';
   try {
     const r = await fetch(`${API}/evaluate/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        samples: [sample],
-        retrieval_mode: selectedMode,
-        top_k: 5,
-      })
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ samples, retrieval_mode: evalMode, top_k: parseInt(document.getElementById('evalTopK').value)||5 })
     });
-
-    if (!r.ok) {
-      const e = await r.json().catch(() => ({}));
-      throw new Error(e.detail || `HTTP ${r.status}`);
-    }
-
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail || `HTTP ${r.status}`); }
     const d = await r.json();
     renderEval(d);
-  } catch (err) {
-    showAlert('evalAlert', 'error', `Evaluation failed: ${err.message}`);
-  } finally {
-    setLoading(btn, false);
-  }
+  } catch(err) {
+    showAlert('evalAlert','err', `Evaluation failed: ${err.message}`);
+  } finally { setLoading(btn, false); }
 }
 
 function renderEval(data) {
   const scores = data.aggregate_scores || {};
-  document.getElementById('llmLabel').textContent = `llm: ${data.llm_used || 'extractive'}`;
-  document.getElementById('evalTime').textContent = `processed in ${(data.processing_time_ms||0).toFixed(0)}ms · ${data.num_samples} sample(s)`;
+  document.getElementById('evalLLM').textContent = `llm: ${data.llm_used || 'extractive'}`;
+  document.getElementById('evalMetaTime').textContent = `${(data.processing_time_ms||0).toFixed(0)}ms · ${data.num_samples} sample(s)`;
 
   const metrics = [
-    { key: 'faithfulness', label: 'Faithfulness' },
-    { key: 'answer_relevancy', label: 'Answer Relevancy' },
-    { key: 'context_recall', label: 'Context Recall' },
-    { key: 'context_precision', label: 'Context Precision' },
+    {key:'faithfulness',label:'Faithfulness'},
+    {key:'answer_relevancy',label:'Answer Relevancy'},
+    {key:'context_recall',label:'Context Recall'},
+    {key:'context_precision',label:'Context Precision'},
   ];
-
   let html = '';
   metrics.forEach(m => {
     const v = scores[m.key];
-    const pct = v != null ? (v * 100).toFixed(1) : null;
+    const pct = v != null ? (v*100).toFixed(1) : null;
     html += `<div class="metric-row">
       <div class="metric-name">${m.label}</div>
-      <div class="metric-bar-wrap">
-        <div class="metric-bar" id="bar-${m.key}" style="width:0%"></div>
-      </div>
-      <div class="metric-val">
-        ${pct != null ? `${pct}%` : '<span class="metric-null">—</span>'}
-      </div>
+      <div class="metric-bar-wrap"><div class="metric-bar" id="mb-${m.key}"></div></div>
+      <div class="metric-val">${pct != null ? pct+'%' : '<span class="metric-null">—</span>'}</div>
     </div>`;
   });
+  document.getElementById('evalMetrics').innerHTML = html;
 
-  document.getElementById('metricsContainer').innerHTML = html;
-  document.getElementById('evalResults').style.display = 'block';
-
+  // Animate bars
   requestAnimationFrame(() => {
     metrics.forEach(m => {
       const v = scores[m.key];
-      if (v != null) {
-        setTimeout(() => {
-          const bar = document.getElementById(`bar-${m.key}`);
-          if (bar) bar.style.width = (v * 100) + '%';
-        }, 100);
-      }
+      if (v != null) setTimeout(() => {
+        const bar = document.getElementById(`mb-${m.key}`);
+        if (bar) bar.style.width = (v*100) + '%';
+      }, 100);
     });
   });
+
+  // Per-sample results
+  const sl = document.getElementById('sampleResultsList');
+  if (data.sample_results && data.sample_results.length) {
+    sl.innerHTML = data.sample_results.map((s,i) => {
+      const sc = s.scores || {};
+      const chips = metrics.map(m => {
+        const v = sc[m.key];
+        return `<span class="s-chip">${m.label.split(' ')[0]} <span>${v!=null?(v*100).toFixed(0)+'%':'—'}</span></span>`;
+      }).join('');
+      return `<div class="sample-card" style="animation-delay:${i*.08}s">
+        <div class="sample-head" onclick="this.nextElementSibling.classList.toggle('open')">
+          <span class="sample-q">${esc(s.question)}</span>
+          <div class="sample-scores">${chips}</div>
+          <span style="color:var(--text3);font-size:12px;margin-left:8px">▸</span>
+        </div>
+        <div class="sample-body">
+          <div class="sample-answer">${esc(s.answer||'—')}</div>
+          ${s.ground_truth ? `<div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:4px">GROUND TRUTH</div><div style="font-size:12px;color:var(--text2);padding:8px;background:var(--bg1);border-radius:4px;margin-bottom:12px">${esc(s.ground_truth)}</div>` : ''}
+          <div class="sample-ctx">CONTEXTS (${(s.contexts||[]).length})</div>
+          ${(s.contexts||[]).slice(0,3).map(c => `<div class="ctx-item">${esc(c)}</div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  } else sl.innerHTML = '';
+
+  document.getElementById('evalOutput').style.display = 'block';
 }
 
-// ── Helpers ──
+/* ─── HELPERS ────────────────────────────────────────── */
 function setLoading(btn, on) {
   btn.classList.toggle('loading', on);
   btn.disabled = on;
 }
-
 function showAlert(id, type, msg) {
   const el = document.getElementById(id);
-  el.className = `alert alert-${type} visible`;
-  el.innerHTML = `<span>${msg}</span>`;
+  el.className = `alert alert-${type} show`;
+  el.textContent = msg;
 }
-
 function hideAlert(id) {
-  document.getElementById(id).className = 'alert';
+  const el = document.getElementById(id);
+  if (el) el.className = 'alert';
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function escapeHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+/* ─── SMOOTH NAV SCROLL ──────────────────────────────── */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) { e.preventDefault(); el.scrollIntoView({behavior:'smooth'}); }
+  });
+});
 </script>
 </body>
 </html>
