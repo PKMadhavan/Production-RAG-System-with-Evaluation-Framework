@@ -9,24 +9,24 @@
 <style>
 /* ─── TOKENS ─────────────────────────────────────────────── */
 :root {
-  --bg:       #06090f;
-  --bg1:      #0b0f1a;
-  --bg2:      #111827;
-  --border:   #1e2a3a;
-  --border2:  #263347;
+  --bg:       #EFF3F8;
+  --bg1:      #FFFFFF;
+  --bg2:      #E4EAF3;
+  --border:   #C5D0E0;
+  --border2:  #A0B0C8;
 
-  --cyan:     #00d4ff;
-  --cyan2:    #00a8cc;
-  --cyan-dim: rgba(0,212,255,.12);
-  --cyan-glow:rgba(0,212,255,.25);
-  --amber:    #f59e0b;
-  --green:    #10b981;
-  --red:      #ef4444;
-  --purple:   #8b5cf6;
+  --cyan:     #0355A4;
+  --cyan2:    #0466C8;
+  --cyan-dim: rgba(3,85,164,.10);
+  --cyan-glow:rgba(3,85,164,.20);
+  --amber:    #B45309;
+  --green:    #166534;
+  --red:      #B91C1C;
+  --purple:   #6D28D9;
 
-  --text:     #e2e8f0;
-  --text2:    #94a3b8;
-  --text3:    #475569;
+  --text:     #0A0F1E;
+  --text2:    #2D3A52;
+  --text3:    #5C6B84;
 
   --mono:     'Space Mono', monospace;
   --display:  'Bebas Neue', sans-serif;
@@ -56,8 +56,9 @@ body{
 nav{
   position:fixed;top:0;left:0;right:0;
   height:var(--nav-h);
-  background:rgba(6,9,15,.85);
+  background:rgba(255,255,255,.92);
   backdrop-filter:blur(12px);
+  box-shadow:0 1px 0 var(--border);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;
   padding:0 32px;gap:0;
@@ -70,6 +71,7 @@ nav{
   color:var(--cyan);
   margin-right:40px;
   flex-shrink:0;
+  font-weight:700;
 }
 .nav-links{
   display:flex;gap:4px;flex:1;
@@ -164,21 +166,21 @@ h3{
 .hero-grid-bg{
   position:absolute;inset:0;
   background-image:
-    linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
+    linear-gradient(rgba(3,85,164,.06) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(3,85,164,.06) 1px,transparent 1px);
   background-size:48px 48px;
   pointer-events:none;
 }
 .hero-glow{
   position:absolute;top:-200px;right:-200px;
   width:700px;height:700px;
-  background:radial-gradient(circle,rgba(0,212,255,.08) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(3,85,164,.10) 0%,transparent 70%);
   pointer-events:none;
 }
 .hero-glow2{
   position:absolute;bottom:-300px;left:-100px;
   width:500px;height:500px;
-  background:radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(109,40,217,.07) 0%,transparent 70%);
   pointer-events:none;
 }
 .hero-inner{
@@ -191,7 +193,7 @@ h3{
 .hero-eyebrow{
   display:inline-flex;align-items:center;gap:8px;
   background:var(--cyan-dim);
-  border:1px solid rgba(0,212,255,.2);
+  border:1px solid rgba(3,85,164,.25);
   border-radius:20px;
   padding:5px 14px;
   font-family:var(--mono);
@@ -234,7 +236,7 @@ h3{
   display:inline-flex;align-items:center;gap:8px;
   padding:12px 28px;
   background:var(--cyan);
-  color:#000;
+  color:#fff;
   font-family:var(--mono);
   font-size:12px;
   font-weight:700;
@@ -244,7 +246,7 @@ h3{
   transition:.15s;
   border:none;cursor:pointer;
 }
-.btn-hero:hover{background:#33dbff;box-shadow:0 0 24px rgba(0,212,255,.4);transform:translateY(-1px)}
+.btn-hero:hover{background:#1e6fd4;box-shadow:0 4px 20px rgba(3,85,164,.35);transform:translateY(-1px)}
 .btn-hero-ghost{
   display:inline-flex;align-items:center;gap:8px;
   padding:12px 24px;
@@ -331,7 +333,7 @@ h3{
   margin-bottom:12px;
   font-size:16px;
   background:var(--flow-dim,var(--cyan-dim));
-  border:1px solid var(--flow-border,rgba(0,212,255,.2));
+  border:1px solid var(--flow-border,rgba(3,85,164,.2));
 }
 .flow-title{font-size:13px;font-weight:600;margin-bottom:6px}
 .flow-desc{font-size:12px;color:var(--text2);line-height:1.6}
@@ -444,8 +446,8 @@ input[type=text],input[type=number],textarea,select{
   width:100%;
 }
 input[type=text]:focus,textarea:focus,select:focus,input[type=number]:focus{
-  border-color:rgba(0,212,255,.4);
-  box-shadow:0 0 0 3px rgba(0,212,255,.06);
+  border-color:rgba(3,85,164,.35);
+  box-shadow:0 0 0 3px rgba(3,85,164,.08);
 }
 textarea{resize:vertical;min-height:72px}
 select option{background:var(--bg1)}
@@ -474,8 +476,8 @@ input[type=range]{
   border:none;
   transition:.15s;
 }
-.btn-primary{background:var(--cyan);color:#000}
-.btn-primary:hover:not(:disabled){background:#33dbff;box-shadow:0 0 20px rgba(0,212,255,.3)}
+.btn-primary{background:var(--cyan);color:#fff}
+.btn-primary:hover:not(:disabled){background:#1e6fd4;box-shadow:0 4px 16px rgba(3,85,164,.3)}
 .btn-primary:active:not(:disabled){transform:scale(.98)}
 .btn-primary:disabled{opacity:.35;cursor:not-allowed}
 .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
@@ -556,7 +558,7 @@ input[type=range]{
   display:flex;align-items:center;justify-content:center;gap:5px;
 }
 .mode-pill:hover{color:var(--text)}
-.mode-pill.active{background:var(--cyan);color:#000;box-shadow:0 0 12px rgba(0,212,255,.25)}
+.mode-pill.active{background:var(--cyan);color:#fff;box-shadow:0 4px 12px rgba(3,85,164,.3)}
 .mode-desc{
   font-family:var(--mono);font-size:10px;color:var(--text3);
   margin-top:6px;min-height:16px;transition:.2s;
@@ -574,7 +576,7 @@ input[type=range]{
 }
 .results-header .mode-badge{
   padding:3px 10px;border-radius:3px;font-size:10px;letter-spacing:.5px;
-  background:var(--cyan-dim);border:1px solid rgba(0,212,255,.2);color:var(--cyan);
+  background:var(--cyan-dim);border:1px solid rgba(3,85,164,.2);color:var(--cyan);
 }
 .results-header .cached-badge{
   font-size:10px;color:var(--amber);display:none;
@@ -601,7 +603,7 @@ input[type=range]{
   border-radius:3px;border:1px solid;text-transform:uppercase;
 }
 .rb-rank{background:rgba(148,163,184,.06);border-color:rgba(148,163,184,.2);color:var(--text2)}
-.rb-page{background:var(--cyan-dim);border-color:rgba(0,212,255,.2);color:var(--cyan)}
+.rb-page{background:var(--cyan-dim);border-color:rgba(3,85,164,.2);color:var(--cyan)}
 .rb-strat{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2);color:var(--amber)}
 .score-col{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
 .score-num{font-family:var(--mono);font-size:13px;color:var(--text)}
@@ -745,7 +747,7 @@ input[type=range]{
   padding:3px 8px;border-radius:3px;flex-shrink:0;
 }
 .method-get{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)}
-.method-post{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(0,212,255,.2)}
+.method-post{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(3,85,164,.2)}
 .ep-path{font-family:var(--mono);font-size:12px;color:var(--text)}
 .ep-body{padding:14px 18px}
 .ep-desc{font-size:12px;color:var(--text2);margin-bottom:12px}
@@ -905,10 +907,10 @@ footer{
       </defs>
 
       <!-- Background -->
-      <rect width="960" height="420" fill="#06090f"/>
+      <rect width="960" height="420" fill="#EFF3F8"/>
 
       <!-- Grid lines -->
-      <g opacity=".04" stroke="#00d4ff">
+      <g opacity=".5" stroke="#C5D0E0">
         <line x1="0" y1="60" x2="960" y2="60"/>
         <line x1="0" y1="120" x2="960" y2="120"/>
         <line x1="0" y1="180" x2="960" y2="180"/>
@@ -923,87 +925,87 @@ footer{
       </g>
 
       <!-- INTERNET node -->
-      <rect x="20" y="168" width="110" height="48" rx="4" fill="#0b0f1a" stroke="#1e2a3a"/>
-      <text x="75" y="187" text-anchor="middle" fill="#475569" font-size="9" letter-spacing="2">CLIENT</text>
-      <text x="75" y="203" text-anchor="middle" fill="#94a3b8" font-size="12" font-weight="700">INTERNET</text>
+      <rect x="20" y="168" width="110" height="48" rx="4" fill="#FFFFFF" stroke="#C5D0E0"/>
+      <text x="75" y="187" text-anchor="middle" fill="#5C6B84" font-size="9" letter-spacing="2">CLIENT</text>
+      <text x="75" y="203" text-anchor="middle" fill="#0A0F1E" font-size="12" font-weight="700">INTERNET</text>
 
       <!-- Arrow: Internet → API -->
-      <line x1="131" y1="192" x2="195" y2="192" stroke="#1e2a3a" stroke-width="1.5" marker-end="url(#arr)"/>
-      <text x="163" y="187" text-anchor="middle" fill="#475569" font-size="8">HTTP</text>
+      <line x1="131" y1="192" x2="195" y2="192" stroke="#A0B0C8" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="163" y="187" text-anchor="middle" fill="#5C6B84" font-size="8">HTTP</text>
 
       <!-- FASTAPI (center) -->
-      <rect x="196" y="80" width="200" height="224" rx="6" fill="#0b0f1a" stroke="#00d4ff" stroke-width="1.5" opacity=".9"/>
-      <text x="296" y="105" text-anchor="middle" fill="#00d4ff" font-size="9" letter-spacing="2">CORE ENGINE</text>
-      <text x="296" y="124" text-anchor="middle" fill="#e2e8f0" font-size="16" font-weight="700">FastAPI</text>
+      <rect x="196" y="80" width="200" height="224" rx="6" fill="#FFFFFF" stroke="#0355A4" stroke-width="1.5"/>
+      <text x="296" y="105" text-anchor="middle" fill="#0355A4" font-size="9" letter-spacing="2">CORE ENGINE</text>
+      <text x="296" y="124" text-anchor="middle" fill="#0A0F1E" font-size="16" font-weight="700">FastAPI</text>
 
       <!-- Sub-boxes inside FastAPI -->
-      <rect x="210" y="138" width="172" height="30" rx="3" fill="#111827" stroke="#1e2a3a"/>
-      <text x="296" y="149" text-anchor="middle" fill="#94a3b8" font-size="9">Document Loader</text>
-      <text x="296" y="161" text-anchor="middle" fill="#475569" font-size="8">PDF · TXT → Chunks</text>
+      <rect x="210" y="138" width="172" height="30" rx="3" fill="#EFF3F8" stroke="#C5D0E0"/>
+      <text x="296" y="149" text-anchor="middle" fill="#2D3A52" font-size="9">Document Loader</text>
+      <text x="296" y="161" text-anchor="middle" fill="#5C6B84" font-size="8">PDF · TXT → Chunks</text>
 
-      <rect x="210" y="176" width="172" height="30" rx="3" fill="#111827" stroke="#1e2a3a"/>
-      <text x="296" y="187" text-anchor="middle" fill="#94a3b8" font-size="9">Embedder</text>
-      <text x="296" y="199" text-anchor="middle" fill="#475569" font-size="8">BAAI/bge-large (1024d)</text>
+      <rect x="210" y="176" width="172" height="30" rx="3" fill="#EFF3F8" stroke="#C5D0E0"/>
+      <text x="296" y="187" text-anchor="middle" fill="#2D3A52" font-size="9">Embedder</text>
+      <text x="296" y="199" text-anchor="middle" fill="#5C6B84" font-size="8">BAAI/bge-large (1024d)</text>
 
-      <rect x="210" y="214" width="172" height="30" rx="3" fill="#111827" stroke="#1e2a3a"/>
-      <text x="296" y="225" text-anchor="middle" fill="#94a3b8" font-size="9">RRF Fusion</text>
-      <text x="296" y="237" text-anchor="middle" fill="#475569" font-size="8">Reciprocal Rank Fusion</text>
+      <rect x="210" y="214" width="172" height="30" rx="3" fill="#EFF3F8" stroke="#C5D0E0"/>
+      <text x="296" y="225" text-anchor="middle" fill="#2D3A52" font-size="9">RRF Fusion</text>
+      <text x="296" y="237" text-anchor="middle" fill="#5C6B84" font-size="8">Reciprocal Rank Fusion</text>
 
-      <rect x="210" y="252" width="172" height="30" rx="3" fill="#111827" stroke="#1e2a3a"/>
-      <text x="296" y="263" text-anchor="middle" fill="#94a3b8" font-size="9">RAGAS Evaluator</text>
-      <text x="296" y="275" text-anchor="middle" fill="#475569" font-size="8">Faithfulness · Relevancy</text>
+      <rect x="210" y="252" width="172" height="30" rx="3" fill="#EFF3F8" stroke="#C5D0E0"/>
+      <text x="296" y="263" text-anchor="middle" fill="#2D3A52" font-size="9">RAGAS Evaluator</text>
+      <text x="296" y="275" text-anchor="middle" fill="#5C6B84" font-size="8">Faithfulness · Relevancy</text>
 
       <!-- Arrow: API → pgvector -->
-      <line x1="397" y1="152" x2="467" y2="140" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arr-c)"/>
-      <text x="430" y="140" text-anchor="middle" fill="#00d4ff" font-size="8">dense</text>
+      <line x1="397" y1="152" x2="467" y2="140" stroke="#0355A4" stroke-width="1.5" marker-end="url(#arr-c)"/>
+      <text x="430" y="140" text-anchor="middle" fill="#0355A4" font-size="8">dense</text>
 
       <!-- Arrow: API → BM25 -->
-      <line x1="397" y1="230" x2="467" y2="230" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arr)"/>
-      <text x="430" y="222" text-anchor="middle" fill="#f59e0b" font-size="8">sparse</text>
+      <line x1="397" y1="230" x2="467" y2="230" stroke="#B45309" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="430" y="222" text-anchor="middle" fill="#B45309" font-size="8">sparse</text>
 
       <!-- Arrow: API → Redis -->
-      <line x1="296" y1="305" x2="296" y2="360" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr-p)"/>
-      <text x="310" y="340" fill="#8b5cf6" font-size="8">cache</text>
+      <line x1="296" y1="305" x2="296" y2="360" stroke="#6D28D9" stroke-width="1.5" marker-end="url(#arr-p)"/>
+      <text x="310" y="340" fill="#6D28D9" font-size="8">cache</text>
 
       <!-- Arrow: API → LangSmith -->
-      <line x1="397" y1="330" x2="467" y2="350" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr-p)"/>
+      <line x1="397" y1="330" x2="467" y2="350" stroke="#6D28D9" stroke-width="1.5" marker-end="url(#arr-p)"/>
 
       <!-- pgvector box -->
-      <rect x="468" y="60" width="160" height="80" rx="5" fill="#0b0f1a" stroke="#00d4ff" stroke-width="1"/>
-      <text x="548" y="83" text-anchor="middle" fill="#00d4ff" font-size="9" letter-spacing="2">POSTGRES 16</text>
-      <text x="548" y="103" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">pgvector</text>
-      <text x="548" y="120" text-anchor="middle" fill="#475569" font-size="9">cosine similarity</text>
-      <text x="548" y="133" text-anchor="middle" fill="#475569" font-size="9">Cloud SQL</text>
+      <rect x="468" y="60" width="160" height="80" rx="5" fill="#FFFFFF" stroke="#0355A4" stroke-width="1"/>
+      <text x="548" y="83" text-anchor="middle" fill="#0355A4" font-size="9" letter-spacing="2">POSTGRES 16</text>
+      <text x="548" y="103" text-anchor="middle" fill="#0A0F1E" font-size="14" font-weight="700">pgvector</text>
+      <text x="548" y="120" text-anchor="middle" fill="#5C6B84" font-size="9">cosine similarity</text>
+      <text x="548" y="133" text-anchor="middle" fill="#5C6B84" font-size="9">Cloud SQL</text>
 
       <!-- BM25 box -->
-      <rect x="468" y="165" width="160" height="70" rx="5" fill="#0b0f1a" stroke="#f59e0b" stroke-width="1"/>
-      <text x="548" y="186" text-anchor="middle" fill="#f59e0b" font-size="9" letter-spacing="2">IN-PROCESS</text>
-      <text x="548" y="207" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">BM25 Index</text>
-      <text x="548" y="224" text-anchor="middle" fill="#475569" font-size="9">rank-bm25 · TF-IDF</text>
+      <rect x="468" y="165" width="160" height="70" rx="5" fill="#FFFFFF" stroke="#B45309" stroke-width="1"/>
+      <text x="548" y="186" text-anchor="middle" fill="#B45309" font-size="9" letter-spacing="2">IN-PROCESS</text>
+      <text x="548" y="207" text-anchor="middle" fill="#0A0F1E" font-size="14" font-weight="700">BM25 Index</text>
+      <text x="548" y="224" text-anchor="middle" fill="#5C6B84" font-size="9">rank-bm25 · TF-IDF</text>
 
       <!-- Redis box -->
-      <rect x="210" y="360" width="172" height="48" rx="5" fill="#0b0f1a" stroke="#8b5cf6" stroke-width="1"/>
-      <text x="296" y="381" text-anchor="middle" fill="#8b5cf6" font-size="9" letter-spacing="2">CACHING</text>
-      <text x="296" y="399" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Redis 7</text>
+      <rect x="210" y="360" width="172" height="48" rx="5" fill="#FFFFFF" stroke="#6D28D9" stroke-width="1"/>
+      <text x="296" y="381" text-anchor="middle" fill="#6D28D9" font-size="9" letter-spacing="2">CACHING</text>
+      <text x="296" y="399" text-anchor="middle" fill="#0A0F1E" font-size="14" font-weight="700">Redis 7</text>
 
       <!-- LangSmith box -->
-      <rect x="468" y="330" width="160" height="70" rx="5" fill="#0b0f1a" stroke="#8b5cf6" stroke-width="1"/>
-      <text x="548" y="351" text-anchor="middle" fill="#8b5cf6" font-size="9" letter-spacing="2">OBSERVABILITY</text>
-      <text x="548" y="372" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">LangSmith</text>
-      <text x="548" y="389" text-anchor="middle" fill="#475569" font-size="9">trace · eval · monitor</text>
+      <rect x="468" y="330" width="160" height="70" rx="5" fill="#FFFFFF" stroke="#6D28D9" stroke-width="1"/>
+      <text x="548" y="351" text-anchor="middle" fill="#6D28D9" font-size="9" letter-spacing="2">OBSERVABILITY</text>
+      <text x="548" y="372" text-anchor="middle" fill="#0A0F1E" font-size="14" font-weight="700">LangSmith</text>
+      <text x="548" y="389" text-anchor="middle" fill="#5C6B84" font-size="9">trace · eval · monitor</text>
 
       <!-- GitHub Actions box -->
-      <rect x="700" y="20" width="220" height="90" rx="5" fill="#0b0f1a" stroke="#10b981" stroke-width="1"/>
-      <text x="810" y="43" text-anchor="middle" fill="#10b981" font-size="9" letter-spacing="2">CI/CD</text>
-      <text x="810" y="65" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">GitHub Actions</text>
-      <text x="810" y="83" text-anchor="middle" fill="#475569" font-size="9">test → build → push → deploy</text>
-      <text x="810" y="98" text-anchor="middle" fill="#475569" font-size="9">Terraform · Cloud Run</text>
+      <rect x="700" y="20" width="220" height="90" rx="5" fill="#FFFFFF" stroke="#166534" stroke-width="1"/>
+      <text x="810" y="43" text-anchor="middle" fill="#166534" font-size="9" letter-spacing="2">CI/CD</text>
+      <text x="810" y="65" text-anchor="middle" fill="#0A0F1E" font-size="14" font-weight="700">GitHub Actions</text>
+      <text x="810" y="83" text-anchor="middle" fill="#5C6B84" font-size="9">test → build → push → deploy</text>
+      <text x="810" y="98" text-anchor="middle" fill="#5C6B84" font-size="9">Terraform · Cloud Run</text>
 
       <!-- Cloud Run label -->
-      <rect x="700" y="140" width="220" height="80" rx="5" fill="#0b0f1a" stroke="#00d4ff" stroke-width="1" stroke-dasharray="4 3"/>
-      <text x="810" y="163" text-anchor="middle" fill="#00d4ff" font-size="9" letter-spacing="2">GCP</text>
-      <text x="810" y="185" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">Cloud Run</text>
-      <text x="810" y="204" text-anchor="middle" fill="#475569" font-size="9">serverless · auto-scale</text>
+      <rect x="700" y="140" width="220" height="80" rx="5" fill="#FFFFFF" stroke="#0355A4" stroke-width="1" stroke-dasharray="4 3"/>
+      <text x="810" y="163" text-anchor="middle" fill="#0355A4" font-size="9" letter-spacing="2">GCP</text>
+      <text x="810" y="185" text-anchor="middle" fill="#0A0F1E" font-size="14" font-weight="700">Cloud Run</text>
+      <text x="810" y="204" text-anchor="middle" fill="#5C6B84" font-size="9">serverless · auto-scale</text>
 
       <!-- Arrow: GH Actions → Cloud Run -->
       <line x1="810" y1="110" x2="810" y2="138" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr-g)"/>
@@ -1017,7 +1019,7 @@ footer{
 
   <!-- Data Flow Cards -->
   <div class="flow-cards" style="margin-top:32px">
-    <div class="flow-card reveal" style="--flow-color:#00d4ff;--flow-dim:var(--cyan-dim);--flow-border:rgba(0,212,255,.2)">
+    <div class="flow-card reveal" style="--flow-color:#00d4ff;--flow-dim:var(--cyan-dim);--flow-border:rgba(3,85,164,.2)">
       <div class="flow-icon">📥</div>
       <div class="flow-title">Ingestion Pipeline</div>
       <div class="flow-desc">Upload PDF/TXT → extract → chunk (fixed or semantic) → embed with BAAI/bge-large-en-v1.5 → store in pgvector + update BM25 index → invalidate Redis cache.</div>
@@ -1046,7 +1048,7 @@ footer{
       <div class="tech-icon">⚡</div>
       <div class="tech-name">FastAPI</div>
       <div class="tech-role">api/main.py</div>
-      <span class="tech-tag" style="background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid rgba(0,212,255,.2)">Backend</span>
+      <span class="tech-tag" style="background:rgba(3,85,164,.08);color:var(--cyan);border:1px solid rgba(3,85,164,.2)">Backend</span>
     </div>
     <div class="tech-card reveal">
       <div class="tech-icon">🐘</div>
@@ -1106,7 +1108,7 @@ footer{
       <div class="tech-icon">🐳</div>
       <div class="tech-name">Docker</div>
       <div class="tech-role">containerization</div>
-      <span class="tech-tag" style="background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid rgba(0,212,255,.2)">Runtime</span>
+      <span class="tech-tag" style="background:rgba(3,85,164,.08);color:var(--cyan);border:1px solid rgba(3,85,164,.2)">Runtime</span>
     </div>
     <div class="tech-card reveal">
       <div class="tech-icon">🧪</div>
